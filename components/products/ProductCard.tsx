@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
@@ -48,9 +50,7 @@ export function ProductCard({ product }: ProductCardProps) {
               className="w-full"
               variant={product.stock === 0 ? "secondary" : "primary"}
               disabled={product.stock === 0}
-              onClick={(e) => {
-                e.preventDefault();
-              }}
+              onClick={() => {}}
             >
               {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>

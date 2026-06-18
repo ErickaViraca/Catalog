@@ -8,9 +8,9 @@ type Tab = "products" | "categories" | "banners";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("products");
-  const [products, setProducts] = useState(mockProducts);
-  const [categories, setCategories] = useState(mockCategories);
-  const [banners, setBanners] = useState(mockBanners);
+  const [products, setProducts] = useState<any[]>(mockProducts);
+  const [categories, setCategories] = useState<any[]>(mockCategories);
+  const [banners, setBanners] = useState<any[]>(mockBanners);
 
   const [newProduct, setNewProduct] = useState({
     name: "",

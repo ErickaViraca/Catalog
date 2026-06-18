@@ -1,21 +1,29 @@
+const now = new Date();
+
 export const mockCategories = [
   {
     id: "cat-1",
     name: "Power Banks",
     slug: "power-banks",
     image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "cat-2",
     name: "Cables & Adapters",
     slug: "cables-adapters",
     image: "https://images.unsplash.com/photo-1609034227505-5876f6aa4e90?w=300&h=300&fit=crop",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "cat-3",
     name: "Chargers",
     slug: "chargers",
     image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop",
+    createdAt: now,
+    updatedAt: now,
   },
 ];
 
@@ -27,11 +35,13 @@ export const mockProducts = [
     description: "65W super fast charging, supports 3 devices simultaneously",
     price: 89.99,
     stock: 45,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1609034227505-5876f6aa4e90?w=500&h=500&fit=crop",
       "https://images.unsplash.com/photo-1595612864284-c2e6e6ca0261?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-1",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-2",
@@ -40,10 +50,12 @@ export const mockProducts = [
     description: "Lightweight and portable, perfect for travel",
     price: 49.99,
     stock: 120,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1609034227505-5876f6aa4e90?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-1",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-3",
@@ -52,10 +64,12 @@ export const mockProducts = [
     description: "Eco-friendly solar charging capability",
     price: 69.99,
     stock: 30,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1585518473505-6a2f4e40ca90?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-1",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-4",
@@ -64,10 +78,12 @@ export const mockProducts = [
     description: "Fast data transfer, durable nylon braided",
     price: 19.99,
     stock: 200,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1625948515291-69613efd103f?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-2",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-5",
@@ -76,10 +92,12 @@ export const mockProducts = [
     description: "Compatible with all iPhone models, MFi certified",
     price: 29.99,
     stock: 150,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1625948515291-69613efd103f?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-2",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-6",
@@ -88,10 +106,12 @@ export const mockProducts = [
     description: "GaN technology, compact design, universal compatibility",
     price: 44.99,
     stock: 85,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-3",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-7",
@@ -100,10 +120,12 @@ export const mockProducts = [
     description: "Fast 15W wireless charging for all Qi devices",
     price: 39.99,
     stock: 60,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1585518473505-6a2f4e40ca90?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-3",
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "prod-8",
@@ -112,10 +134,12 @@ export const mockProducts = [
     description: "Charge 4 devices at once, smart charging technology",
     price: 34.99,
     stock: 75,
-    images: [
+    images: JSON.stringify([
       "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=500&h=500&fit=crop",
-    ],
+    ]),
     categoryId: "cat-3",
+    createdAt: now,
+    updatedAt: now,
   },
 ];
 
@@ -127,6 +151,8 @@ export const mockBanners = [
     link: "/shop",
     order: 1,
     active: true,
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: "banner-2",
@@ -135,5 +161,7 @@ export const mockBanners = [
     link: "/shop",
     order: 2,
     active: true,
+    createdAt: now,
+    updatedAt: now,
   },
 ];
