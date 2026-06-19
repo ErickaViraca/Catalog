@@ -44,14 +44,14 @@ export default function ShopPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Shop</h1>
+      <h1 className="text-4xl font-bold mb-8">Catalogo</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1">
           {/* Search */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Search</h3>
+            <h3 className="font-bold text-lg mb-4">Buscar</h3>
             <input
               type="text"
               placeholder="Search products..."
@@ -63,7 +63,7 @@ export default function ShopPage() {
 
           {/* Categories Filter */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Categories</h3>
+            <h3 className="font-bold text-lg mb-4">Categorias</h3>
             <div className="space-y-2">
               <button
                 onClick={() => setSelectedCategory(null)}
@@ -73,7 +73,7 @@ export default function ShopPage() {
                     : "hover:bg-gray-200"
                 }`}
               >
-                All Categories
+                Todas las Categorias
               </button>
               {mockCategories.map((cat) => (
                 <button
@@ -93,7 +93,7 @@ export default function ShopPage() {
 
           {/* Sort */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Sort By</h3>
+            <h3 className="font-bold text-lg mb-4">Ordenar por</h3>
             <select
               value={sortBy}
               onChange={(e) =>
@@ -112,13 +112,13 @@ export default function ShopPage() {
         <div className="lg:col-span-3">
           <div className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">
-              Showing {filteredProducts.length} products
+              {filteredProducts.length} productos
             </p>
           </div>
 
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-xl text-gray-600">No products found</p>
+              <p className="text-xl text-gray-600">Productos no econtrados</p>
               <Button
                 onClick={() => {
                   setSelectedCategory(null);
@@ -126,7 +126,7 @@ export default function ShopPage() {
                 }}
                 className="mt-4"
               >
-                Reset Filters
+                Limpiar Filtros
               </Button>
             </div>
           ) : (

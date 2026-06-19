@@ -77,34 +77,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Info Section */}
-      <section className="bg-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🚚</div>
-              <h3 className="text-xl font-bold mb-2">Fast Shipping</h3>
-              <p className="text-gray-300">
-                Free shipping on orders over $50
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold mb-2">Secure Payment</h3>
-              <p className="text-gray-300">
-                100% secure transactions
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">↩️</div>
-              <h3 className="text-xl font-bold mb-2">Easy Returns</h3>
-              <p className="text-gray-300">
-                30-day money-back guarantee
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+
     </div>
   );
 }
