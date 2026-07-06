@@ -100,7 +100,6 @@ export const productImages = pgTable(
     productFk: foreignKey({
       columns: [table.productId],
       foreignColumns: [products.id],
-      onDelete: "cascade",
     }),
   })
 );
