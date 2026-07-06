@@ -1,4 +1,4 @@
-import { brandRepository } from "../repository/brands";
+import { brandRepository } from "../repository/brandsRepository";
 import { NewBrand } from "../db/schema";
 
 export class BrandService {
@@ -22,7 +22,6 @@ export class BrandService {
     logo?: string;
     description?: string;
   }) {
-    // Validations
     if (!data.name || data.name.trim().length === 0) {
       throw new Error("Brand name is required");
     }
@@ -31,7 +30,6 @@ export class BrandService {
       throw new Error("Brand slug is required");
     }
 
-    // Check if slug is unique
     const existing = await brandRepository.findBySlug(data.slug);
     if (existing.length > 0) {
       throw new Error("Slug already exists");
@@ -57,13 +55,11 @@ export class BrandService {
       description: string;
     }>
   ) {
-    // Verify brand exists
     const existing = await this.getBrandById(id);
     if (!existing) {
       throw new Error("Brand not found");
     }
 
-    // Check if new slug is unique (if slug is being updated)
     if (data.slug && data.slug !== existing.slug) {
       const slugExists = await brandRepository.findBySlug(data.slug);
       if (slugExists.length > 0) {
