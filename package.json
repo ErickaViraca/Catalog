@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
-    "db:push": "dotenv -e .env.local -- drizzle-kit push:pg",
-    "db:studio": "dotenv -e .env.local -- drizzle-kit studio"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "node scripts/migrate.js",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "drizzle-orm": "^0.30.10",
@@ -23,7 +23,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "dotenv-cli": "^7.4.2",
+    "dotenv": "^16.3.1",
     "drizzle-kit": "^0.20.14",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
