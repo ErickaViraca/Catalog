@@ -306,6 +306,12 @@
           "primaryKey": false,
           "notNull": true
         },
+          "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "slug": {
           "name": "slug",
           "type": "text",

@@ -2,8 +2,6 @@
 
 Modern ecommerce catalog built with Next.js 15, TypeScript, TailwindCSS, and Prisma ORM.
 
-> 🇪🇸 **Estado**: Traducción al español en progreso
-
 ## 🚀 Features
 
 - **Home Page**: Hero banner, featured categories, featured products

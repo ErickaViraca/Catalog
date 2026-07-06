@@ -16,7 +16,7 @@ export function Navbar() {
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-lg font-bold">⚡</span>
             </div>
-            <span className="font-bold text-xl hidden sm:inline">MiTiendaXiaomi</span>
+            <span className="font-bold text-xl hidden sm:inline">SmartCatalog</span>
           </Link>
 
           <div className="flex items-center gap-6">
@@ -24,19 +24,18 @@ export function Navbar() {
               href="/"
               className={`${isActive("/") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
             >
-              Inicio
+              Home
             </Link>
             <Link
               href="/shop"
               className={`${isActive("/shop") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
             >
-              Catalogo
+              Shop
             </Link>
             <Link
               href="/admin"
               className={`${isActive("/admin") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
             >
-              {/* this section must be only visible for administrators */ }
               Admin
             </Link>
           </div>
