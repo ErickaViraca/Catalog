@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockProducts, mockCategories, mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 
@@ -8,10 +8,9 @@ type Tab = "brands" | "products" | "categories" | "banners";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("brands");
-  const [brands, setBrands] = useState<any[]>([
-    { id: "1", name: "Apple", slug: "apple", logo: "", description: "Tech brand", active: true },
-    { id: "2", name: "Samsung", slug: "samsung", logo: "", description: "Electronics", active: true },
-  ]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>(mockProducts);
   const [categories, setCategories] = useState<any[]>(mockCategories);
   const [banners, setBanners] = useState<any[]>(mockBanners);
@@ -24,6 +23,31 @@ export default function AdminPage() {
     description: "",
   });
 
+  // Cargar brands del API
+  useEffect(() => {
+    fetchBrands();
+  }, []);
+
+  const fetchBrands = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch("/api/brands");
+      const data = await response.json();
+
+      if (data.success) {
+        setBrands(data.data);
+      } else {
+        setError(data.error || "Failed to fetch brands");
+      }
+    } catch (err) {
+      setError("Error connecting to server");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     slug: "",
@@ -33,31 +57,53 @@ export default function AdminPage() {
     categoryId: categories[0]?.id || "",
   });
 
-  const handleAddBrand = () => {
+  const handleAddBrand = async () => {
     if (!newBrand.name) return alert("Brand name is required");
     if (!newBrand.slug) return alert("Brand slug is required");
 
-    if (editingBrand) {
-      setBrands(
-        brands.map((b) =>
-          b.id === editingBrand.id
-            ? { ...editingBrand, ...newBrand }
-            : b
-        )
-      );
-      setEditingBrand(null);
-      alert("Brand updated successfully!");
-    } else {
-      const brand = {
-        id: `brand-${Date.now()}`,
-        ...newBrand,
-        active: true,
-      };
-      setBrands([...brands, brand]);
-      alert("Brand added successfully!");
-    }
+    try {
+      setLoading(true);
 
-    setNewBrand({ name: "", slug: "", logo: "", description: "" });
+      if (editingBrand) {
+        // Actualizar brand existente
+        const response = await fetch("/api/brands", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingBrand.id, ...newBrand }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchBrands();
+          setEditingBrand(null);
+          alert("Brand updated successfully!");
+        } else {
+          setError(data.error || "Failed to update brand");
+        }
+      } else {
+        // Crear nuevo brand
+        const response = await fetch("/api/brands", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newBrand),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchBrands();
+          alert("Brand created successfully!");
+        } else {
+          setError(data.error || "Failed to create brand");
+        }
+      }
+
+      setNewBrand({ name: "", slug: "", logo: "", description: "" });
+    } catch (err) {
+      setError("Error saving brand");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditBrand = (brand: any) => {
@@ -66,9 +112,29 @@ export default function AdminPage() {
     setActiveTab("brands");
   };
 
-  const handleDeleteBrand = (id: string) => {
-    if (confirm("Are you sure?")) {
-      setBrands(brands.filter((b) => b.id !== id));
+  const handleDeleteBrand = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this brand?")) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/brands", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchBrands();
+        alert("Brand deleted successfully!");
+      } else {
+        setError(data.error || "Failed to delete brand");
+      }
+    } catch (err) {
+      setError("Error deleting brand");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,6 +191,18 @@ export default function AdminPage() {
       {/* Brands Tab */}
       {activeTab === "brands" && (
         <div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+              <button
+                onClick={() => setError(null)}
+                className="float-right font-bold text-red-700 hover:text-red-900"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
               {editingBrand ? "Edit Brand" : "Add New Brand"}
@@ -167,8 +245,8 @@ export default function AdminPage() {
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleAddBrand}>
-                {editingBrand ? "Update Brand" : "Add Brand"}
+              <Button onClick={handleAddBrand} disabled={loading}>
+                {loading ? "Saving..." : editingBrand ? "Update Brand" : "Add Brand"}
               </Button>
               {editingBrand && (
                 <Button
@@ -177,6 +255,7 @@ export default function AdminPage() {
                     setEditingBrand(null);
                     setNewBrand({ name: "", slug: "", logo: "", description: "" });
                   }}
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
@@ -185,68 +264,76 @@ export default function AdminPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Slug
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {brands.map((brand) => (
-                  <tr key={brand.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold">{brand.name}</td>
-                    <td className="px-6 py-4 text-gray-600">{brand.slug}</td>
-                    <td className="px-6 py-4 text-gray-600 text-sm">
-                      {brand.description || "-"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          brand.active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {brand.active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditBrand(brand)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteBrand(brand.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
+            {loading && brands.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Loading brands...
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Slug
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {brands.length === 0 && (
+                </thead>
+                <tbody>
+                  {brands.map((brand) => (
+                    <tr key={brand.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 font-semibold">{brand.name}</td>
+                      <td className="px-6 py-4 text-gray-600">{brand.slug}</td>
+                      <td className="px-6 py-4 text-gray-600 text-sm">
+                        {brand.description || "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            brand.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {brand.active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditBrand(brand)}
+                            disabled={loading}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteBrand(brand.id)}
+                            disabled={loading}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {brands.length === 0 && !loading && (
               <div className="px-6 py-8 text-center text-gray-500">
                 No brands yet. Create your first brand!
               </div>
