@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       count: brands.length,
     });
   } catch (error) {
+    console.error("GET /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    console.error("POST /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -97,6 +99,7 @@ export async function PATCH(request: NextRequest) {
       message: "Brand updated successfully",
     });
   } catch (error) {
+    console.error("PATCH /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -130,6 +133,7 @@ export async function DELETE(request: NextRequest) {
       message: "Brand deleted successfully",
     });
   } catch (error) {
+    console.error("DELETE /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
