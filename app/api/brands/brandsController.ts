@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const id = url.searchParams.get("id");
 
     if (id) {
-      // GET /api/controllers/brands?id=xxx
+      // GET /api/brands?id=xxx
       const brand = await brandService.getBrandById(id);
 
       if (!brand) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // GET /api/controllers/brands
+    // GET /api/brands
     const brands = await brandService.getAllBrands();
     return NextResponse.json({
       success: true,
