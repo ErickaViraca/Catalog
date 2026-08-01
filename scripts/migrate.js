@@ -3,7 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
-const url = require('url');
 require('dotenv').config({ path: '.env.local' });
 
 async function migrate() {
@@ -12,17 +11,8 @@ async function migrate() {
     process.exit(1);
   }
 
-  // Parse connection string and remove sslmode parameter
-  let connectionString = process.env.DATABASE_URL;
-  const parsedUrl = new url.URL(connectionString);
-  parsedUrl.searchParams.delete('sslmode');
-  connectionString = parsedUrl.toString();
-
   const pool = new Pool({
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    connectionString: process.env.DATABASE_URL,
   });
 
   try {
