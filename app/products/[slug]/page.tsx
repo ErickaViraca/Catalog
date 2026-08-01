@@ -38,11 +38,11 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-8 text-sm">
           <Link href="/" className="text-blue-600 hover:underline">
-            Home
+            Inicio
           </Link>
           <span>/</span>
           <Link href="/shop" className="text-blue-600 hover:underline">
-            Shop
+            Catálogo
           </Link>
           <span>/</span>
           <span className="text-gray-600">{product.name}</span>
@@ -115,7 +115,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             {/* Quantity Selector */}
             <div className="mb-6">
               <label className="block text-sm font-semibold mb-2">
-                Quantity:
+                Cantidad:
               </label>
               <div className="flex items-center gap-4">
                 <button
@@ -146,22 +146,22 @@ export default function ProductPage({ params }: ProductPageProps) {
               className="w-full mb-4"
               disabled={product.stock === 0}
               onClick={() => {
-                alert(`Added ${quantity} of "${product.name}" to cart!`);
+                alert(`¡Se agregaron ${quantity} de "${product.name}" al carrito!`);
               }}
             >
-              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              {product.stock === 0 ? "Agotado" : "Agregar al Carrito"}
             </Button>
 
             {/* Additional Info */}
             <div className="border-t pt-6">
-              <h3 className="font-bold text-lg mb-4">Additional Information</h3>
+              <h3 className="font-bold text-lg mb-4">Información Adicional</h3>
               <ul className="space-y-3 text-gray-600">
                 <li className="flex justify-between">
-                  <span>Product ID:</span>
+                  <span>ID de Producto:</span>
                   <span className="font-mono">{product.id}</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Stock Status:</span>
+                  <span>Estado del Stock:</span>
                   <span
                     className={
                       product.stock > 0
@@ -169,7 +169,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                         : "text-red-600 font-bold"
                     }
                   >
-                    {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                    {product.stock > 0 ? "En Stock" : "Agotado"}
                   </span>
                 </li>
               </ul>
@@ -180,7 +180,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-8">Related Products</h2>
+            <h2 className="text-3xl font-bold mb-8">Productos Relacionados</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((prod) => (
                 <ProductCard key={prod.id} product={prod} />

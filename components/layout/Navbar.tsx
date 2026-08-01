@@ -24,13 +24,13 @@ export function Navbar() {
               href="/"
               className={`${isActive("/") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
             >
-              Home
+              Inicio
             </Link>
             <Link
               href="/shop"
               className={`${isActive("/shop") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
             >
-              Shop
+              Catálogo
             </Link>
             <Link
               href="/admin"

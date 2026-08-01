@@ -22,12 +22,12 @@ export default function Home() {
         )}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white z-10">
-            <h1 className="text-5xl font-bold mb-4">Welcome to SmartCatalog</h1>
+            <h1 className="text-5xl font-bold mb-4">Bienvenido a SmartCatalog</h1>
             <p className="text-xl mb-8 text-gray-100">
-              Discover the best tech accessories at unbeatable prices
+              Descubre los mejores accesorios tecnológicos a precios inigualables
             </p>
             <Link href="/shop">
-              <Button size="lg">Shop Now</Button>
+              <Button size="lg">Comprar Ahora</Button>
             </Link>
           </div>
         </div>
@@ -35,7 +35,7 @@ export default function Home() {
 
       {/* Featured Categories */}
       <section className="max-w-7xl mx-auto px-4 py-16 w-full">
-        <h2 className="text-3xl font-bold mb-12">Featured Categories</h2>
+        <h2 className="text-3xl font-bold mb-12">Categorías Destacadas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {mockCategories.map((category) => (
             <Link key={category.id} href={`/shop?category=${category.slug}`}>
@@ -52,7 +52,7 @@ export default function Home() {
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{category.name}</h3>
-                  <p className="text-gray-600 text-sm mt-2">Explore →</p>
+                  <p className="text-gray-600 text-sm mt-2">Explorar →</p>
                 </div>
               </div>
             </Link>
@@ -62,7 +62,7 @@ export default function Home() {
 
       {/* Featured Products */}
       <section className="max-w-7xl mx-auto px-4 py-16 w-full">
-        <h2 className="text-3xl font-bold mb-12">Featured Products</h2>
+        <h2 className="text-3xl font-bold mb-12">Productos Destacados</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -71,7 +71,7 @@ export default function Home() {
         <div className="text-center mt-12">
           <Link href="/shop">
             <Button variant="outline" size="lg">
-              View All Products
+              Ver Todos los Productos
             </Button>
           </Link>
         </div>
@@ -83,23 +83,23 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="text-4xl mb-4">🚚</div>
-              <h3 className="text-xl font-bold mb-2">Fast Shipping</h3>
+              <h3 className="text-xl font-bold mb-2">Envío Rápido</h3>
               <p className="text-gray-300">
-                Free shipping on orders over $50
+                Envío gratis en pedidos mayores a $50
               </p>
             </div>
             <div className="text-center">
               <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold mb-2">Secure Payment</h3>
+              <h3 className="text-xl font-bold mb-2">Pago Seguro</h3>
               <p className="text-gray-300">
-                100% secure transactions
+                Transacciones 100% seguras
               </p>
             </div>
             <div className="text-center">
               <div className="text-4xl mb-4">↩️</div>
-              <h3 className="text-xl font-bold mb-2">Easy Returns</h3>
+              <h3 className="text-xl font-bold mb-2">Devoluciones Fáciles</h3>
               <p className="text-gray-300">
-                30-day money-back guarantee
+                Garantía de devolución de 30 días
               </p>
             </div>
           </div>

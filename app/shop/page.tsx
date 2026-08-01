@@ -44,17 +44,17 @@ export default function ShopPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Shop</h1>
+      <h1 className="text-4xl font-bold mb-8">Catálogo</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1">
           {/* Search */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Search</h3>
+            <h3 className="font-bold text-lg mb-4">Buscar</h3>
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -63,7 +63,7 @@ export default function ShopPage() {
 
           {/* Categories Filter */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Categories</h3>
+            <h3 className="font-bold text-lg mb-4">Categorías</h3>
             <div className="space-y-2">
               <button
                 onClick={() => setSelectedCategory(null)}
@@ -73,7 +73,7 @@ export default function ShopPage() {
                     : "hover:bg-gray-200"
                 }`}
               >
-                All Categories
+                Todas las Categorías
               </button>
               {mockCategories.map((cat) => (
                 <button
@@ -93,7 +93,7 @@ export default function ShopPage() {
 
           {/* Sort */}
           <div className="mb-8">
-            <h3 className="font-bold text-lg mb-4">Sort By</h3>
+            <h3 className="font-bold text-lg mb-4">Ordenar por</h3>
             <select
               value={sortBy}
               onChange={(e) =>
@@ -101,9 +101,9 @@ export default function ShopPage() {
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="name">Name (A-Z)</option>
-              <option value="price-asc">Price (Low to High)</option>
-              <option value="price-desc">Price (High to Low)</option>
+              <option value="name">Nombre (A-Z)</option>
+              <option value="price-asc">Precio (Menor a Mayor)</option>
+              <option value="price-desc">Precio (Mayor a Menor)</option>
             </select>
           </div>
         </div>
@@ -112,13 +112,13 @@ export default function ShopPage() {
         <div className="lg:col-span-3">
           <div className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">
-              Showing {filteredProducts.length} products
+              Mostrando {filteredProducts.length} productos
             </p>
           </div>
 
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-xl text-gray-600">No products found</p>
+              <p className="text-xl text-gray-600">No se encontraron productos</p>
               <Button
                 onClick={() => {
                   setSelectedCategory(null);
@@ -126,7 +126,7 @@ export default function ShopPage() {
                 }}
                 className="mt-4"
               >
-                Reset Filters
+                Restablecer Filtros
               </Button>
             </div>
           ) : (

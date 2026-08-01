@@ -23,16 +23,16 @@ export class BrandService {
     description?: string;
   }) {
     if (!data.name || data.name.trim().length === 0) {
-      throw new Error("Brand name is required");
+      throw new Error("El nombre de la marca es requerido");
     }
 
     if (!data.slug || data.slug.trim().length === 0) {
-      throw new Error("Brand slug is required");
+      throw new Error("El slug de la marca es requerido");
     }
 
     const existing = await brandRepository.findBySlug(data.slug);
     if (existing.length > 0) {
-      throw new Error("Slug already exists");
+      throw new Error("El slug ya existe");
     }
 
     const result = await brandRepository.create({
@@ -57,13 +57,13 @@ export class BrandService {
   ) {
     const existing = await this.getBrandById(id);
     if (!existing) {
-      throw new Error("Brand not found");
+      throw new Error("Marca no encontrada");
     }
 
     if (data.slug && data.slug !== existing.slug) {
       const slugExists = await brandRepository.findBySlug(data.slug);
       if (slugExists.length > 0) {
-        throw new Error("Slug already exists");
+        throw new Error("El slug ya existe");
       }
     }
 
@@ -80,7 +80,7 @@ export class BrandService {
   async deleteBrand(id: string) {
     const existing = await this.getBrandById(id);
     if (!existing) {
-      throw new Error("Brand not found");
+      throw new Error("Marca no encontrada");
     }
 
     const result = await brandRepository.delete(id);
@@ -90,7 +90,7 @@ export class BrandService {
   async toggleBrandActive(id: string, active: boolean) {
     const existing = await this.getBrandById(id);
     if (!existing) {
-      throw new Error("Brand not found");
+      throw new Error("Marca no encontrada");
     }
 
     const result = await brandRepository.toggleActive(id, active);

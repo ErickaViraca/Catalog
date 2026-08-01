@@ -26,7 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <span className="text-white text-lg font-bold">Out of Stock</span>
+              <span className="text-white text-lg font-bold">Agotado</span>
             </div>
           )}
         </div>
@@ -43,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ${product.price.toFixed(2)}
               </span>
               <span className="text-sm text-gray-500">
-                {product.stock} in stock
+                {product.stock} en stock
               </span>
             </div>
             <Button
@@ -52,7 +52,7 @@ export function ProductCard({ product }: ProductCardProps) {
               disabled={product.stock === 0}
               onClick={() => {}}
             >
-              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              {product.stock === 0 ? "Agotado" : "Agregar al Carrito"}
             </Button>
           </div>
         </div>

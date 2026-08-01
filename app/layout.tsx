@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SmartCatalog - Tech Accessories Store",
-  description: "Your trusted source for quality tech accessories and gadgets",
+  title: "SmartCatalog - Tienda de Accesorios Tecnológicos",
+  description: "Tu fuente confiable de accesorios tecnológicos y gadgets de calidad",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-gray-50">

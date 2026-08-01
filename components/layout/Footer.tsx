@@ -8,20 +8,20 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4">SmartCatalog</h3>
             <p className="text-gray-400 text-sm">
-              Your trusted source for quality tech accessories.
+              Tu fuente confiable de accesorios tecnológicos de calidad.
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
                 <Link href="/" className="hover:text-blue-400">
-                  Home
+                  Inicio
                 </Link>
               </li>
               <li>
                 <Link href="/shop" className="hover:text-blue-400">
-                  Shop
+                  Catálogo
                 </Link>
               </li>
               <li>
@@ -32,27 +32,27 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">Soporte</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
                 <a href="#" className="hover:text-blue-400">
-                  Contact
+                  Contacto
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400">
-                  FAQ
+                  Preguntas Frecuentes
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-400">
-                  Shipping
+                  Envíos
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
+            <h4 className="font-semibold mb-4">Síguenos</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li>
                 <a href="#" className="hover:text-blue-400">
@@ -75,7 +75,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            &copy; 2024 SmartCatalog. All rights reserved. | Built with Next.js
+            &copy; 2024 SmartCatalog. Todos los derechos reservados. | Hecho con Next.js
           </p>
         </div>
       </div>

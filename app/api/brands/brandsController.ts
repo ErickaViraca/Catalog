@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "Brand not found",
+            error: "Marca no encontrada",
           },
           { status: 404 }
         );
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch brands",
+        error: error instanceof Error ? error.message : "Error al obtener las marcas",
       },
       { status: 500 }
     );
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         data: brand,
-        message: "Brand created successfully",
+        message: "Marca creada exitosamente",
       },
       { status: 201 }
     );
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create brand",
+        error: error instanceof Error ? error.message : "Error al crear la marca",
       },
       { status: 400 }
     );
@@ -85,7 +85,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Brand ID is required",
+          error: "El ID de la marca es requerido",
         },
         { status: 400 }
       );
@@ -96,14 +96,14 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: brand,
-      message: "Brand updated successfully",
+      message: "Marca actualizada exitosamente",
     });
   } catch (error) {
     console.error("PATCH /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update brand",
+        error: error instanceof Error ? error.message : "Error al actualizar la marca",
       },
       { status: 400 }
     );
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Brand ID is required",
+          error: "El ID de la marca es requerido",
         },
         { status: 400 }
       );
@@ -130,14 +130,14 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: brand,
-      message: "Brand deleted successfully",
+      message: "Marca eliminada exitosamente",
     });
   } catch (error) {
     console.error("DELETE /api/brands error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete brand",
+        error: error instanceof Error ? error.message : "Error al eliminar la marca",
       },
       { status: 400 }
     );

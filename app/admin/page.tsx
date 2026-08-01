@@ -6,6 +6,13 @@ import { Button } from "@/components/common/Button";
 
 type Tab = "brands" | "products" | "categories" | "banners";
 
+const TAB_LABELS: Record<Tab, string> = {
+  brands: "Marcas",
+  products: "Productos",
+  categories: "Categorías",
+  banners: "Banners",
+};
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("brands");
   const [brands, setBrands] = useState<any[]>([]);
@@ -38,10 +45,10 @@ export default function AdminPage() {
       if (data.success) {
         setBrands(data.data);
       } else {
-        setError(data.error || "Failed to fetch brands");
+        setError(data.error || "Error al obtener las marcas");
       }
     } catch (err) {
-      setError("Error connecting to server");
+      setError("Error al conectar con el servidor");
       console.error(err);
     } finally {
       setLoading(false);
@@ -58,8 +65,8 @@ export default function AdminPage() {
   });
 
   const handleAddBrand = async () => {
-    if (!newBrand.name) return alert("Brand name is required");
-    if (!newBrand.slug) return alert("Brand slug is required");
+    if (!newBrand.name) return alert("El nombre de la marca es requerido");
+    if (!newBrand.slug) return alert("El slug de la marca es requerido");
 
     try {
       setLoading(true);
@@ -76,9 +83,9 @@ export default function AdminPage() {
         if (data.success) {
           await fetchBrands();
           setEditingBrand(null);
-          alert("Brand updated successfully!");
+          alert("¡Marca actualizada exitosamente!");
         } else {
-          setError(data.error || "Failed to update brand");
+          setError(data.error || "Error al actualizar la marca");
         }
       } else {
         // Crear nuevo brand
@@ -91,15 +98,15 @@ export default function AdminPage() {
         const data = await response.json();
         if (data.success) {
           await fetchBrands();
-          alert("Brand created successfully!");
+          alert("¡Marca creada exitosamente!");
         } else {
-          setError(data.error || "Failed to create brand");
+          setError(data.error || "Error al crear la marca");
         }
       }
 
       setNewBrand({ name: "", slug: "", logo: "", description: "" });
     } catch (err) {
-      setError("Error saving brand");
+      setError("Error al guardar la marca");
       console.error(err);
     } finally {
       setLoading(false);
@@ -113,7 +120,7 @@ export default function AdminPage() {
   };
 
   const handleDeleteBrand = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this brand?")) return;
+    if (!confirm("¿Estás seguro de que deseas eliminar esta marca?")) return;
 
     try {
       setLoading(true);
@@ -126,12 +133,12 @@ export default function AdminPage() {
       const data = await response.json();
       if (data.success) {
         await fetchBrands();
-        alert("Brand deleted successfully!");
+        alert("¡Marca eliminada exitosamente!");
       } else {
-        setError(data.error || "Failed to delete brand");
+        setError(data.error || "Error al eliminar la marca");
       }
     } catch (err) {
-      setError("Error deleting brand");
+      setError("Error al eliminar la marca");
       console.error(err);
     } finally {
       setLoading(false);
@@ -139,7 +146,7 @@ export default function AdminPage() {
   };
 
   const handleAddProduct = () => {
-    if (!newProduct.name) return alert("Product name is required");
+    if (!newProduct.name) return alert("El nombre del producto es requerido");
 
     const product = {
       id: `prod-${Date.now()}`,
@@ -160,7 +167,7 @@ export default function AdminPage() {
       stock: 0,
       categoryId: categories[0]?.id || "",
     });
-    alert("Product added successfully!");
+    alert("¡Producto agregado exitosamente!");
   };
 
   const handleDeleteProduct = (id: string) => {
@@ -169,7 +176,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Admin Panel</h1>
+      <h1 className="text-4xl font-bold mb-8">Panel de Administración</h1>
 
       {/* Tabs */}
       <div className="flex gap-4 mb-8 border-b">
@@ -183,7 +190,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {TAB_LABELS[tab]}
           </button>
         ))}
       </div>
@@ -205,12 +212,12 @@ export default function AdminPage() {
 
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
-              {editingBrand ? "Edit Brand" : "Add New Brand"}
+              {editingBrand ? "Editar Marca" : "Agregar Nueva Marca"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <input
                 type="text"
-                placeholder="Brand Name"
+                placeholder="Nombre de la Marca"
                 value={newBrand.name}
                 onChange={(e) =>
                   setNewBrand({ ...newBrand, name: e.target.value })
@@ -228,7 +235,7 @@ export default function AdminPage() {
               />
               <input
                 type="text"
-                placeholder="Logo URL"
+                placeholder="URL del Logo"
                 value={newBrand.logo}
                 onChange={(e) =>
                   setNewBrand({ ...newBrand, logo: e.target.value })
@@ -236,7 +243,7 @@ export default function AdminPage() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <textarea
-                placeholder="Description"
+                placeholder="Descripción"
                 value={newBrand.description}
                 onChange={(e) =>
                   setNewBrand({ ...newBrand, description: e.target.value })
@@ -246,7 +253,7 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAddBrand} disabled={loading}>
-                {loading ? "Saving..." : editingBrand ? "Update Brand" : "Add Brand"}
+                {loading ? "Guardando..." : editingBrand ? "Actualizar Marca" : "Agregar Marca"}
               </Button>
               {editingBrand && (
                 <Button
@@ -257,7 +264,7 @@ export default function AdminPage() {
                   }}
                   disabled={loading}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
               )}
             </div>
@@ -266,26 +273,26 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             {loading && brands.length === 0 ? (
               <div className="px-6 py-8 text-center text-gray-500">
-                Loading brands...
+                Cargando marcas...
               </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Name
+                      Nombre
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Slug
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Description
+                      Descripción
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Status
+                      Estado
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Actions
+                      Acciones
                     </th>
                   </tr>
                 </thead>
@@ -305,7 +312,7 @@ export default function AdminPage() {
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {brand.active ? "Active" : "Inactive"}
+                          {brand.active ? "Activo" : "Inactivo"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -316,7 +323,7 @@ export default function AdminPage() {
                             onClick={() => handleEditBrand(brand)}
                             disabled={loading}
                           >
-                            Edit
+                            Editar
                           </Button>
                           <Button
                             size="sm"
@@ -324,7 +331,7 @@ export default function AdminPage() {
                             onClick={() => handleDeleteBrand(brand.id)}
                             disabled={loading}
                           >
-                            Delete
+                            Eliminar
                           </Button>
                         </div>
                       </td>
@@ -335,7 +342,7 @@ export default function AdminPage() {
             )}
             {brands.length === 0 && !loading && (
               <div className="px-6 py-8 text-center text-gray-500">
-                No brands yet. Create your first brand!
+                Aún no hay marcas. ¡Crea tu primera marca!
               </div>
             )}
           </div>
@@ -346,11 +353,11 @@ export default function AdminPage() {
       {activeTab === "products" && (
         <div>
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Add New Product</h2>
+            <h2 className="text-2xl font-bold mb-6">Agregar Nuevo Producto</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <input
                 type="text"
-                placeholder="Product Name"
+                placeholder="Nombre del Producto"
                 value={newProduct.name}
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, name: e.target.value })
@@ -368,7 +375,7 @@ export default function AdminPage() {
               />
               <input
                 type="text"
-                placeholder="Description"
+                placeholder="Descripción"
                 value={newProduct.description}
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, description: e.target.value })
@@ -377,7 +384,7 @@ export default function AdminPage() {
               />
               <input
                 type="number"
-                placeholder="Price"
+                placeholder="Precio"
                 value={newProduct.price}
                 onChange={(e) =>
                   setNewProduct({
@@ -413,7 +420,7 @@ export default function AdminPage() {
                 ))}
               </select>
             </div>
-            <Button onClick={handleAddProduct}>Add Product</Button>
+            <Button onClick={handleAddProduct}>Agregar Producto</Button>
           </div>
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -421,19 +428,19 @@ export default function AdminPage() {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Name
+                    Nombre
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Price
+                    Precio
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">
                     Stock
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Category
+                    Categoría
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Actions
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -452,7 +459,7 @@ export default function AdminPage() {
                         variant="outline"
                         onClick={() => handleDeleteProduct(product.id)}
                       >
-                        Delete
+                        Eliminar
                       </Button>
                     </td>
                   </tr>
@@ -466,7 +473,7 @@ export default function AdminPage() {
       {/* Categories Tab */}
       {activeTab === "categories" && (
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-6">Categories</h2>
+          <h2 className="text-2xl font-bold mb-6">Categorías</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {categories.map((cat) => (
               <div key={cat.id} className="border rounded-lg p-4">
@@ -486,9 +493,9 @@ export default function AdminPage() {
             {banners.map((banner) => (
               <div key={banner.id} className="border rounded-lg p-4">
                 <h3 className="font-bold text-lg">{banner.title}</h3>
-                <p className="text-gray-600 text-sm">Link: {banner.link || "No link"}</p>
+                <p className="text-gray-600 text-sm">Enlace: {banner.link || "Sin enlace"}</p>
                 <p className="text-gray-600 text-sm">
-                  Active: {banner.active ? "Yes" : "No"}
+                  Activo: {banner.active ? "Sí" : "No"}
                 </p>
               </div>
             ))}
