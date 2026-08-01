@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { mockProducts, mockCategories, mockBanners } from "@/data/mock";
+import { mockProducts, mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 
 type Tab = "brands" | "products" | "categories" | "banners";
@@ -19,7 +19,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>(mockProducts);
-  const [categories, setCategories] = useState<any[]>(mockCategories);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
   const [banners, setBanners] = useState<any[]>(mockBanners);
   const [editingBrand, setEditingBrand] = useState<any>(null);
 
@@ -30,9 +33,17 @@ export default function AdminPage() {
     description: "",
   });
 
-  // Cargar brands del API
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    slug: "",
+    image: "",
+    description: "",
+  });
+
+  // Cargar brands y categories del API
   useEffect(() => {
     fetchBrands();
+    fetchCategories();
   }, []);
 
   const fetchBrands = async () => {
@@ -52,6 +63,26 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      setCategoriesError(null);
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+
+      if (data.success) {
+        setCategories(data.data);
+      } else {
+        setCategoriesError(data.error || "Error al obtener las categorías");
+      }
+    } catch (err) {
+      setCategoriesError("Error al conectar con el servidor");
+      console.error(err);
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 
@@ -142,6 +173,92 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.name) return alert("El nombre de la categoría es requerido");
+    if (!newCategory.slug) return alert("El slug de la categoría es requerido");
+
+    try {
+      setCategoriesLoading(true);
+
+      if (editingCategory) {
+        // Actualizar category existente
+        const response = await fetch("/api/categories", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingCategory.id, ...newCategory }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchCategories();
+          setEditingCategory(null);
+          alert("¡Categoría actualizada exitosamente!");
+        } else {
+          setCategoriesError(data.error || "Error al actualizar la categoría");
+        }
+      } else {
+        // Crear nueva category
+        const response = await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newCategory),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchCategories();
+          alert("¡Categoría creada exitosamente!");
+        } else {
+          setCategoriesError(data.error || "Error al crear la categoría");
+        }
+      }
+
+      setNewCategory({ name: "", slug: "", image: "", description: "" });
+    } catch (err) {
+      setCategoriesError("Error al guardar la categoría");
+      console.error(err);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setNewCategory({
+      name: category.name,
+      slug: category.slug,
+      image: category.image || "",
+      description: category.description || "",
+    });
+    setActiveTab("categories");
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar esta categoría?")) return;
+
+    try {
+      setCategoriesLoading(true);
+      const response = await fetch("/api/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchCategories();
+        alert("¡Categoría eliminada exitosamente!");
+      } else {
+        setCategoriesError(data.error || "Error al eliminar la categoría");
+      }
+    } catch (err) {
+      setCategoriesError("Error al eliminar la categoría");
+      console.error(err);
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 
@@ -472,15 +589,158 @@ export default function AdminPage() {
 
       {/* Categories Tab */}
       {activeTab === "categories" && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-6">Categorías</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {categories.map((cat) => (
-              <div key={cat.id} className="border rounded-lg p-4">
-                <h3 className="font-bold text-lg">{cat.name}</h3>
-                <p className="text-gray-600 text-sm">Slug: {cat.slug}</p>
+        <div>
+          {categoriesError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {categoriesError}
+              <button
+                onClick={() => setCategoriesError(null)}
+                className="float-right font-bold text-red-700 hover:text-red-900"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-6">
+              {editingCategory ? "Editar Categoría" : "Agregar Nueva Categoría"}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Nombre de la Categoría"
+                value={newCategory.name}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="Slug"
+                value={newCategory.slug}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, slug: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="URL de la Imagen"
+                value={newCategory.image}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, image: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <textarea
+                placeholder="Descripción"
+                value={newCategory.description}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, description: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddCategory} disabled={categoriesLoading}>
+                {categoriesLoading
+                  ? "Guardando..."
+                  : editingCategory
+                    ? "Actualizar Categoría"
+                    : "Agregar Categoría"}
+              </Button>
+              {editingCategory && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setNewCategory({ name: "", slug: "", image: "", description: "" });
+                  }}
+                  disabled={categoriesLoading}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {categoriesLoading && categories.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Cargando categorías...
               </div>
-            ))}
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Nombre
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Slug
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Descripción
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat) => (
+                    <tr key={cat.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 font-semibold">{cat.name}</td>
+                      <td className="px-6 py-4 text-gray-600">{cat.slug}</td>
+                      <td className="px-6 py-4 text-gray-600 text-sm">
+                        {cat.description || "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            cat.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {cat.active ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditCategory(cat)}
+                            disabled={categoriesLoading}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            disabled={categoriesLoading}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {categories.length === 0 && !categoriesLoading && (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Aún no hay categorías. ¡Crea tu primera categoría!
+              </div>
+            )}
           </div>
         </div>
       )}
