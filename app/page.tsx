@@ -76,35 +76,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
-      {/* Info Section */}
-      <section className="bg-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🚚</div>
-              <h3 className="text-xl font-bold mb-2">Envío Rápido</h3>
-              <p className="text-gray-300">
-                Envío gratis en pedidos mayores a $50
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold mb-2">Pago Seguro</h3>
-              <p className="text-gray-300">
-                Transacciones 100% seguras
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">↩️</div>
-              <h3 className="text-xl font-bold mb-2">Devoluciones Fáciles</h3>
-              <p className="text-gray-300">
-                Garantía de devolución de 30 días
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
