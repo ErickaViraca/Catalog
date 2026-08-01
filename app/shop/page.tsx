@@ -1,16 +1,33 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
-import { mockProducts, mockCategories } from "@/data/mock";
+import { mockProducts } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 
 export default function ShopPage() {
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price-asc" | "price-desc">(
     "name"
   );
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+        if (data.success) {
+          setCategories(data.data);
+        }
+      } catch (err) {
+        console.error("Error al obtener las categorías", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let filtered = mockProducts;
@@ -75,7 +92,7 @@ export default function ShopPage() {
               >
                 Todas
               </button>
-              {mockCategories.map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
