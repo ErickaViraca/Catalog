@@ -22,7 +22,7 @@ export default function Home() {
         )}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white z-10">
-            <h1 className="text-5xl font-bold mb-4">Bienvenido a SmartCatalog</h1>
+            <h1 className="text-5xl font-bold mb-4">Bienvenido a MiTiendaXiaomi</h1>
             <p className="text-xl mb-8 text-gray-100">
               Descubre los mejores accesorios tecnológicos a precios inigualables
             </p>

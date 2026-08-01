@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SmartCatalog - Tienda de Accesorios Tecnológicos",
+  title: "MiTiendaXiaomi - Tienda de Accesorios Tecnológicos",
   description: "Tu fuente confiable de accesorios tecnológicos y gadgets de calidad",
 };
 

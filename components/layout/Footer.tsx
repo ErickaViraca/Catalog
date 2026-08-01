@@ -6,7 +6,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">SmartCatalog</h3>
+            <h3 className="font-bold text-lg mb-4">MiTiendaXiaomi</h3>
             <p className="text-gray-400 text-sm">
               Tu fuente confiable de accesorios tecnológicos de calidad.
             </p>
@@ -75,7 +75,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            &copy; 2024 SmartCatalog. Todos los derechos reservados. | Hecho con Next.js
+            &copy; 2026 MiTiendaXiaomi. Todos los derechos reservados. | Hecho con Next.js
           </p>
         </div>
       </div>

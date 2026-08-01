@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { XiaomiLogo } from "@/components/common/XiaomiLogo";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -13,10 +14,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-lg font-bold">⚡</span>
-            </div>
-            <span className="font-bold text-xl hidden sm:inline">SmartCatalog</span>
+            <XiaomiLogo size={28} />
+            <span className="font-bold text-xl hidden sm:inline">MiTiendaXiaomi</span>
           </Link>
 
           <div className="flex items-center gap-6">
