@@ -34,6 +34,11 @@ export default function AdminPage() {
   // Sufijo aleatorio fijo para el borrador actual: el nombre puede cambiar
   // mientras se escribe, pero el sufijo no se regenera en cada letra
   const [productSlugSuffix, setProductSlugSuffix] = useState(() => randomSlugSuffix());
+  // Tope de caracteres para edición manual del slug: el mismo largo que
+  // tendría el slug autogenerado (2 palabras + sufijo)
+  const [productSlugMaxLength, setProductSlugMaxLength] = useState(
+    () => productSlugSuffix.length
+  );
 
   const [newBrand, setNewBrand] = useState({
     name: "",
@@ -298,7 +303,9 @@ export default function AdminPage() {
       categoryId: categories[0]?.id || "",
     });
     setProductSlugTouched(false);
-    setProductSlugSuffix(randomSlugSuffix());
+    const nextSuffix = randomSlugSuffix();
+    setProductSlugSuffix(nextSuffix);
+    setProductSlugMaxLength(nextSuffix.length);
     alert("¡Producto agregado exitosamente!");
   };
 
@@ -500,16 +507,16 @@ export default function AdminPage() {
                 value={newProduct.name}
                 onChange={(e) => {
                   const name = e.target.value;
-                  setNewProduct((prev) => {
-                    if (productSlugTouched) {
-                      return { ...prev, name };
-                    }
-                    const base = truncateSlugWords(slugify(name), 2);
-                    const slug = base
-                      ? `${base}-${productSlugSuffix}`
-                      : productSlugSuffix;
-                    return { ...prev, name, slug };
-                  });
+                  if (productSlugTouched) {
+                    setNewProduct((prev) => ({ ...prev, name }));
+                    return;
+                  }
+                  const base = truncateSlugWords(slugify(name), 2);
+                  const slug = base
+                    ? `${base}-${productSlugSuffix}`
+                    : productSlugSuffix;
+                  setProductSlugMaxLength(slug.length);
+                  setNewProduct((prev) => ({ ...prev, name, slug }));
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -517,9 +524,11 @@ export default function AdminPage() {
                 type="text"
                 placeholder="Slug"
                 value={newProduct.slug}
+                maxLength={productSlugMaxLength}
                 onChange={(e) => {
                   setProductSlugTouched(true);
-                  setNewProduct({ ...newProduct, slug: slugify(e.target.value) });
+                  const sanitized = slugify(e.target.value).slice(0, productSlugMaxLength);
+                  setNewProduct({ ...newProduct, slug: sanitized });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
