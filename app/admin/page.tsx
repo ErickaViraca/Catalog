@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { mockProducts, mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
+import { slugify } from "@/src/lib/slugify";
 
 type Tab = "brands" | "products" | "categories" | "banners";
 
@@ -25,6 +26,11 @@ export default function AdminPage() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [banners, setBanners] = useState<any[]>(mockBanners);
   const [editingBrand, setEditingBrand] = useState<any>(null);
+
+  // Mientras el usuario no edite el slug a mano, se autogenera a partir del nombre
+  const [brandSlugTouched, setBrandSlugTouched] = useState(false);
+  const [categorySlugTouched, setCategorySlugTouched] = useState(false);
+  const [productSlugTouched, setProductSlugTouched] = useState(false);
 
   const [newBrand, setNewBrand] = useState({
     name: "",
@@ -136,6 +142,7 @@ export default function AdminPage() {
       }
 
       setNewBrand({ name: "", slug: "", logo: "", description: "" });
+      setBrandSlugTouched(false);
     } catch (err) {
       setError("Error al guardar la marca");
       console.error(err);
@@ -147,6 +154,7 @@ export default function AdminPage() {
   const handleEditBrand = (brand: any) => {
     setEditingBrand(brand);
     setNewBrand(brand);
+    setBrandSlugTouched(true);
     setActiveTab("brands");
   };
 
@@ -217,6 +225,7 @@ export default function AdminPage() {
       }
 
       setNewCategory({ name: "", slug: "", image: "", description: "" });
+      setCategorySlugTouched(false);
     } catch (err) {
       setCategoriesError("Error al guardar la categoría");
       console.error(err);
@@ -233,6 +242,7 @@ export default function AdminPage() {
       image: category.image || "",
       description: category.description || "",
     });
+    setCategorySlugTouched(true);
     setActiveTab("categories");
   };
 
@@ -284,6 +294,7 @@ export default function AdminPage() {
       stock: 0,
       categoryId: categories[0]?.id || "",
     });
+    setProductSlugTouched(false);
     alert("¡Producto agregado exitosamente!");
   };
 
@@ -336,18 +347,24 @@ export default function AdminPage() {
                 type="text"
                 placeholder="Nombre de la Marca"
                 value={newBrand.name}
-                onChange={(e) =>
-                  setNewBrand({ ...newBrand, name: e.target.value })
-                }
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setNewBrand((prev) => ({
+                    ...prev,
+                    name,
+                    slug: brandSlugTouched ? prev.slug : slugify(name),
+                  }));
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
                 placeholder="Slug"
                 value={newBrand.slug}
-                onChange={(e) =>
-                  setNewBrand({ ...newBrand, slug: e.target.value })
-                }
+                onChange={(e) => {
+                  setBrandSlugTouched(true);
+                  setNewBrand({ ...newBrand, slug: slugify(e.target.value) });
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
@@ -378,6 +395,7 @@ export default function AdminPage() {
                   onClick={() => {
                     setEditingBrand(null);
                     setNewBrand({ name: "", slug: "", logo: "", description: "" });
+                    setBrandSlugTouched(false);
                   }}
                   disabled={loading}
                 >
@@ -476,18 +494,24 @@ export default function AdminPage() {
                 type="text"
                 placeholder="Nombre del Producto"
                 value={newProduct.name}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, name: e.target.value })
-                }
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setNewProduct((prev) => ({
+                    ...prev,
+                    name,
+                    slug: productSlugTouched ? prev.slug : slugify(name),
+                  }));
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
                 placeholder="Slug"
                 value={newProduct.slug}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, slug: e.target.value })
-                }
+                onChange={(e) => {
+                  setProductSlugTouched(true);
+                  setNewProduct({ ...newProduct, slug: slugify(e.target.value) });
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
@@ -611,18 +635,24 @@ export default function AdminPage() {
                 type="text"
                 placeholder="Nombre de la Categoría"
                 value={newCategory.name}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    name,
+                    slug: categorySlugTouched ? prev.slug : slugify(name),
+                  }));
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
                 placeholder="Slug"
                 value={newCategory.slug}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, slug: e.target.value })
-                }
+                onChange={(e) => {
+                  setCategorySlugTouched(true);
+                  setNewCategory({ ...newCategory, slug: slugify(e.target.value) });
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
@@ -657,6 +687,7 @@ export default function AdminPage() {
                   onClick={() => {
                     setEditingCategory(null);
                     setNewCategory({ name: "", slug: "", image: "", description: "" });
+                    setCategorySlugTouched(false);
                   }}
                   disabled={categoriesLoading}
                 >
