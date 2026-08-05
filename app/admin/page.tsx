@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { mockProducts, mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
-import { slugify } from "@/src/lib/slugify";
+import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 
 type Tab = "brands" | "products" | "categories" | "banners";
 
@@ -31,6 +31,9 @@ export default function AdminPage() {
   const [brandSlugTouched, setBrandSlugTouched] = useState(false);
   const [categorySlugTouched, setCategorySlugTouched] = useState(false);
   const [productSlugTouched, setProductSlugTouched] = useState(false);
+  // Sufijo aleatorio fijo para el borrador actual: el nombre puede cambiar
+  // mientras se escribe, pero el sufijo no se regenera en cada letra
+  const [productSlugSuffix, setProductSlugSuffix] = useState(() => randomSlugSuffix());
 
   const [newBrand, setNewBrand] = useState({
     name: "",
@@ -295,6 +298,7 @@ export default function AdminPage() {
       categoryId: categories[0]?.id || "",
     });
     setProductSlugTouched(false);
+    setProductSlugSuffix(randomSlugSuffix());
     alert("¡Producto agregado exitosamente!");
   };
 
@@ -496,11 +500,16 @@ export default function AdminPage() {
                 value={newProduct.name}
                 onChange={(e) => {
                   const name = e.target.value;
-                  setNewProduct((prev) => ({
-                    ...prev,
-                    name,
-                    slug: productSlugTouched ? prev.slug : slugify(name),
-                  }));
+                  setNewProduct((prev) => {
+                    if (productSlugTouched) {
+                      return { ...prev, name };
+                    }
+                    const base = truncateSlugWords(slugify(name), 2);
+                    const slug = base
+                      ? `${base}-${productSlugSuffix}`
+                      : productSlugSuffix;
+                    return { ...prev, name, slug };
+                  });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
