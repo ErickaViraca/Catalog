@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
+import { BUTTON_SIZES, ButtonSize } from "@/src/config/ui";
 
 interface ButtonProps {
   children: ReactNode;
   onClick?: () => void;
   className?: string;
   variant?: "primary" | "secondary" | "outline";
-  size?: "sm" | "md" | "lg";
+  size?: ButtonSize;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
 }
@@ -23,15 +24,9 @@ export function Button({
     "font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
-    outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-50",
-  };
-
-  const sizes = {
-    sm: "px-3 py-1 text-sm",
-    md: "px-4 py-2 text-base",
-    lg: "px-6 py-3 text-lg",
+    primary: "bg-primary text-white hover:bg-primary-hover",
+    secondary: "bg-secondary-bg text-secondary-text hover:bg-secondary-bg-hover",
+    outline: "border-2 border-primary text-primary hover:bg-secondary-bg",
   };
 
   return (
@@ -39,7 +34,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${BUTTON_SIZES[size]} ${className}`}
     >
       {children}
     </button>
