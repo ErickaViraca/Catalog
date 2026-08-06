@@ -77,7 +77,11 @@ export class ProductService {
     }
 
     if (!data.sku || data.sku.trim().length === 0) {
-      throw new Error("El SKU del producto es requerido");
+      throw new Error("El código de inventario es requerido");
+    }
+
+    if (data.sku.trim().length > 10) {
+      throw new Error("El código de inventario no puede superar los 10 caracteres");
     }
 
     if (!data.categoryId) {
@@ -95,7 +99,7 @@ export class ProductService {
 
     const existingSku = await productRepository.findBySku(data.sku);
     if (existingSku.length > 0) {
-      throw new Error("El SKU ya existe");
+      throw new Error("Ese código de inventario ya está en uso");
     }
 
     const category = await categoryRepository.findById(data.categoryId);
@@ -166,9 +170,12 @@ export class ProductService {
     }
 
     if (data.sku && data.sku !== existing.sku) {
+      if (data.sku.trim().length > 10) {
+        throw new Error("El código de inventario no puede superar los 10 caracteres");
+      }
       const skuExists = await productRepository.findBySku(data.sku);
       if (skuExists.length > 0) {
-        throw new Error("El SKU ya existe");
+        throw new Error("Ese código de inventario ya está en uso");
       }
     }
 

@@ -11,6 +11,7 @@ import {
   combine,
   required,
   minLength,
+  maxLength,
   nonNegativeInteger,
   selected,
   validateForm,
@@ -163,7 +164,19 @@ export default function AdminPage() {
       return null;
     },
     stock: nonNegativeInteger("El stock"),
-    sku: required("El SKU"),
+    sku: combine(
+      required("El código de inventario"),
+      maxLength(10, "El código de inventario"),
+      (value: unknown) => {
+        if (typeof value !== "string" || value.trim().length === 0) return null;
+        const isDuplicate = products.some(
+          (p) =>
+            p.sku?.toLowerCase() === value.toLowerCase() &&
+            p.id !== editingProduct?.id
+        );
+        return isDuplicate ? "Ese código de inventario ya está en uso" : null;
+      }
+    ),
     categoryId: selected("una categoría"),
     brandId: selected("una marca"),
   };
@@ -687,11 +700,13 @@ export default function AdminPage() {
                 onChange={(code) => setNewProduct({ ...newProduct, code })}
               />
               <Input
-                label="SKU"
+                label="Código de Inventario"
                 required
                 value={newProduct.sku}
                 validate={productValidators.sku}
                 forceTouched={productSubmitAttempted}
+                maxLength={10}
+                helperText="Máximo 10 caracteres, único por producto"
                 onChange={(sku) => setNewProduct({ ...newProduct, sku })}
               />
               <Input
