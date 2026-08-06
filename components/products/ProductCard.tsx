@@ -7,9 +7,10 @@ import { Button } from "@/components/common/Button";
 
 interface ProductCardProps {
   product: Product;
+  hideAddToCart?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, hideAddToCart = false }: ProductCardProps) {
   const mainImage = typeof product.images === "string"
     ? JSON.parse(product.images)[0]
     : product.images[0];
@@ -46,15 +47,17 @@ export function ProductCard({ product }: ProductCardProps) {
                 {product.stock} en stock
               </span>
             </div>
-            <Button
-              size="sm"
-              className="w-full"
-              variant={product.stock === 0 ? "secondary" : "primary"}
-              disabled={product.stock === 0}
-              onClick={() => {}}
-            >
-              {product.stock === 0 ? "Agotado" : "Agregar al Carrito"}
-            </Button>
+            {!hideAddToCart && (
+              <Button
+                size="sm"
+                className="w-full"
+                variant={product.stock === 0 ? "secondary" : "primary"}
+                disabled={product.stock === 0}
+                onClick={() => {}}
+              >
+                {product.stock === 0 ? "Agotado" : "Agregar al Carrito"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
