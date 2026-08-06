@@ -20,6 +20,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>(mockProducts);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
@@ -102,11 +104,15 @@ export default function AdminPage() {
 
   const [newProduct, setNewProduct] = useState({
     name: "",
+    code: "",
     slug: "",
     description: "",
     price: 0,
     stock: 0,
+    sku: "",
     categoryId: categories[0]?.id || "",
+    brandId: brands[0]?.id || "",
+    featured: false,
   });
 
   const handleAddBrand = async () => {
@@ -280,33 +286,53 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!newProduct.name) return alert("El nombre del producto es requerido");
+    if (!newProduct.code) return alert("El código del producto es requerido");
+    if (!newProduct.slug) return alert("El slug del producto es requerido");
+    if (!newProduct.description) return alert("La descripción del producto es requerida");
+    if (!newProduct.sku) return alert("El SKU del producto es requerido");
+    if (!newProduct.categoryId) return alert("La categoría del producto es requerida");
+    if (!newProduct.brandId) return alert("La marca del producto es requerida");
 
-    const product = {
-      id: `prod-${Date.now()}`,
-      ...newProduct,
-      images: JSON.stringify([
-        "https://images.unsplash.com/photo-1609034227505-5876f6aa4e90?w=500&h=500&fit=crop",
-      ]),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    try {
+      setProductsLoading(true);
 
-    setProducts([...products, product]);
-    setNewProduct({
-      name: "",
-      slug: "",
-      description: "",
-      price: 0,
-      stock: 0,
-      categoryId: categories[0]?.id || "",
-    });
-    setProductSlugTouched(false);
-    const nextSuffix = randomSlugSuffix();
-    setProductSlugSuffix(nextSuffix);
-    setProductSlugMaxLength(nextSuffix.length);
-    alert("¡Producto agregado exitosamente!");
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProduct),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("¡Producto agregado exitosamente!");
+      } else {
+        setProductsError(data.error || "Error al crear el producto");
+      }
+
+      setNewProduct({
+        name: "",
+        code: "",
+        slug: "",
+        description: "",
+        price: 0,
+        stock: 0,
+        sku: "",
+        categoryId: categories[0]?.id || "",
+        brandId: brands[0]?.id || "",
+        featured: false,
+      });
+      setProductSlugTouched(false);
+      const nextSuffix = randomSlugSuffix();
+      setProductSlugSuffix(nextSuffix);
+      setProductSlugMaxLength(nextSuffix.length);
+    } catch (err) {
+      setProductsError("Error al guardar el producto");
+      console.error(err);
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
   const handleDeleteProduct = (id: string) => {
@@ -498,6 +524,18 @@ export default function AdminPage() {
       {/* Products Tab */}
       {activeTab === "products" && (
         <div>
+          {productsError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {productsError}
+              <button
+                onClick={() => setProductsError(null)}
+                className="float-right font-bold text-red-700 hover:text-red-900"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">Agregar Nuevo Producto</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -530,6 +568,24 @@ export default function AdminPage() {
                   const sanitized = slugify(e.target.value).slice(0, productSlugMaxLength);
                   setNewProduct({ ...newProduct, slug: sanitized });
                 }}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="Código del Producto"
+                value={newProduct.code}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, code: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="SKU"
+                value={newProduct.sku}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, sku: e.target.value })
+                }
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
@@ -572,14 +628,41 @@ export default function AdminPage() {
                 }
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+                <option value="">Selecciona una categoría</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
               </select>
+              <select
+                value={newProduct.brandId}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, brandId: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecciona una marca</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={newProduct.featured}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, featured: e.target.checked })
+                  }
+                />
+                Producto destacado
+              </label>
             </div>
-            <Button onClick={handleAddProduct}>Agregar Producto</Button>
+            <Button onClick={handleAddProduct} disabled={productsLoading}>
+              {productsLoading ? "Guardando..." : "Agregar Producto"}
+            </Button>
           </div>
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
