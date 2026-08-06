@@ -1,16 +1,32 @@
 import { productRepository } from "../repository/productsRepository";
 import { categoryRepository } from "../repository/categoriesRepository";
 import { brandRepository } from "../repository/brandsRepository";
+import { productImageRepository } from "../repository/productImagesRepository";
 import { NewProduct } from "../db/schema";
 
 export class ProductService {
   async getAllProducts() {
-    return await productRepository.findAll();
+    const items = await productRepository.findAll();
+    const primaryImages = await productImageRepository.findPrimaryByProductIds(
+      items.map((item) => item.id)
+    );
+    const imageByProductId = new Map(
+      primaryImages.map((image) => [image.productId, image.imageUrl])
+    );
+
+    return items.map((item) => ({
+      ...item,
+      imageUrl: imageByProductId.get(item.id) || null,
+    }));
   }
 
   async getProductById(id: string) {
     const result = await productRepository.findById(id);
-    return result[0] || null;
+    const product = result[0];
+    if (!product) return null;
+
+    const primaryImages = await productImageRepository.findPrimaryByProductIds([id]);
+    return { ...product, imageUrl: primaryImages[0]?.imageUrl || null };
   }
 
   async getProductBySlug(slug: string) {
@@ -37,6 +53,7 @@ export class ProductService {
     categoryId: string;
     brandId: string;
     featured?: boolean;
+    imageUrl?: string;
   }) {
     if (!data.name || data.name.trim().length === 0) {
       throw new Error("El nombre del producto es requerido");
@@ -105,7 +122,19 @@ export class ProductService {
       featured: data.featured ?? false,
     });
 
-    return result[0] || null;
+    const product = result[0];
+    if (!product) return null;
+
+    if (data.imageUrl) {
+      await productImageRepository.create({
+        productId: product.id,
+        imageUrl: data.imageUrl,
+        isPrimary: true,
+        order: 0,
+      });
+    }
+
+    return { ...product, imageUrl: data.imageUrl || null };
   }
 
   async updateProduct(
@@ -121,6 +150,7 @@ export class ProductService {
       categoryId: string;
       brandId: string;
       featured: boolean;
+      imageUrl: string;
     }>
   ) {
     const existing = await this.getProductById(id);
@@ -175,7 +205,26 @@ export class ProductService {
     if (data.featured !== undefined) updateData.featured = data.featured;
 
     const result = await productRepository.update(id, updateData);
-    return result[0] || null;
+    const product = result[0];
+    if (!product) return null;
+
+    let imageUrl = existing.imageUrl;
+    if (data.imageUrl !== undefined) {
+      await productImageRepository.deleteByProductId(id);
+      if (data.imageUrl) {
+        await productImageRepository.create({
+          productId: id,
+          imageUrl: data.imageUrl,
+          isPrimary: true,
+          order: 0,
+        });
+        imageUrl = data.imageUrl;
+      } else {
+        imageUrl = null;
+      }
+    }
+
+    return { ...product, imageUrl };
   }
 
   async deleteProduct(id: string) {
@@ -184,6 +233,7 @@ export class ProductService {
       throw new Error("Producto no encontrado");
     }
 
+    await productImageRepository.deleteByProductId(id);
     const result = await productRepository.delete(id);
     return result[0] || null;
   }

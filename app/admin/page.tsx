@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
+import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 
 type Tab = "brands" | "products" | "categories" | "banners";
@@ -23,6 +24,7 @@ export default function AdminPage() {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productImageUploading, setProductImageUploading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
@@ -135,6 +137,7 @@ export default function AdminPage() {
     categoryId: categories[0]?.id || "",
     brandId: brands[0]?.id || "",
     featured: false,
+    imageUrl: "",
   });
 
   const handleAddBrand = async () => {
@@ -364,6 +367,7 @@ export default function AdminPage() {
         categoryId: categories[0]?.id || "",
         brandId: brands[0]?.id || "",
         featured: false,
+        imageUrl: "",
       });
       setProductSlugTouched(false);
       const nextSuffix = randomSlugSuffix();
@@ -390,6 +394,7 @@ export default function AdminPage() {
       categoryId: product.categoryId,
       brandId: product.brandId,
       featured: product.featured,
+      imageUrl: product.imageUrl || "",
     });
     setProductSlugTouched(true);
     setProductSlugMaxLength(product.slug.length);
@@ -419,6 +424,37 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setProductsLoading(false);
+    }
+  };
+
+  const handleProductImageUpload = async (
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setProductImageUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setNewProduct((prev) => ({ ...prev, imageUrl: data.data.url }));
+      } else {
+        setProductsError(data.error || "Error al subir la imagen");
+      }
+    } catch (err) {
+      setProductsError("Error al subir la imagen");
+      console.error(err);
+    } finally {
+      setProductImageUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -745,8 +781,50 @@ export default function AdminPage() {
                 Producto destacado
               </label>
             </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-sm mb-2">Imagen del Producto</h3>
+              <div className="flex items-center gap-4">
+                {newProduct.imageUrl ? (
+                  <img
+                    src={newProduct.imageUrl}
+                    alt="Vista previa"
+                    className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                  />
+                ) : (
+                  <ImagePlaceholder size={64} />
+                )}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    onChange={handleProductImageUpload}
+                    disabled={productImageUploading}
+                    className="text-sm"
+                  />
+                  {productImageUploading && (
+                    <p className="text-sm text-gray-500 mt-1">Subiendo imagen...</p>
+                  )}
+                  {newProduct.imageUrl && !productImageUploading && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNewProduct((prev) => ({ ...prev, imageUrl: "" }))
+                      }
+                      className="text-sm text-red-600 hover:underline mt-1"
+                    >
+                      Quitar imagen
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-2">
-              <Button onClick={handleAddProduct} disabled={productsLoading}>
+              <Button
+                onClick={handleAddProduct}
+                disabled={productsLoading || productImageUploading}
+              >
                 {productsLoading
                   ? "Guardando..."
                   : editingProduct
@@ -769,6 +847,7 @@ export default function AdminPage() {
                       categoryId: categories[0]?.id || "",
                       brandId: brands[0]?.id || "",
                       featured: false,
+                      imageUrl: "",
                     });
                     setProductSlugTouched(false);
                     const nextSuffix = randomSlugSuffix();
@@ -793,6 +872,9 @@ export default function AdminPage() {
                 <thead className="bg-gray-100 border-b">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Imagen
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
                       Nombre
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
@@ -812,6 +894,17 @@ export default function AdminPage() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-12 h-12 object-cover rounded-lg border border-gray-300"
+                          />
+                        ) : (
+                          <ImagePlaceholder size={48} />
+                        )}
+                      </td>
                       <td className="px-6 py-4">{product.name}</td>
                       <td className="px-6 py-4">${Number(product.price).toFixed(2)}</td>
                       <td className="px-6 py-4">{product.stock}</td>

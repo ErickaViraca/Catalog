@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
       categoryId: body.categoryId,
       brandId: body.brandId,
       featured: body.featured,
+      imageUrl: body.imageUrl,
     });
 
     return NextResponse.json(
