@@ -12,7 +12,6 @@ import {
   required,
   minLength,
   slugFormat,
-  positiveNumber,
   nonNegativeInteger,
   selected,
   validateForm,
@@ -35,8 +34,8 @@ export default function AdminPage() {
   const [brandSubmitAttempted, setBrandSubmitAttempted] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
-  const [productsError, setProductsError] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productSubmitAttempted, setProductSubmitAttempted] = useState(false);
   const [productImageUploading, setProductImageUploading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -130,17 +129,16 @@ export default function AdminPage() {
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
-      setProductsError(null);
       const response = await fetch("/api/products");
       const data = await response.json();
 
       if (data.success) {
         setProducts(data.data);
       } else {
-        setProductsError(data.error || "Error al obtener los productos");
+        showError(data.error || "Error al obtener los productos");
       }
     } catch (err) {
-      setProductsError("Error al conectar con el servidor");
+      showError("Error al conectar con el servidor");
       console.error(err);
     } finally {
       setProductsLoading(false);
@@ -160,6 +158,24 @@ export default function AdminPage() {
     featured: false,
     imageUrl: "",
   });
+
+  const productValidators = {
+    name: combine(required("El nombre"), minLength(2, "El nombre")),
+    code: required("El código"),
+    slug: combine(required("El slug"), slugFormat("El slug")),
+    description: combine(required("La descripción"), minLength(10, "La descripción")),
+    price: (value: unknown) => {
+      const num = Number(value);
+      if (!value || Number.isNaN(num) || num <= 0) {
+        return "El precio debe ser mayor a 0";
+      }
+      return null;
+    },
+    stock: nonNegativeInteger("El stock"),
+    sku: required("El SKU"),
+    categoryId: selected("una categoría"),
+    brandId: selected("una marca"),
+  };
 
   const handleAddBrand = async () => {
     setBrandSubmitAttempted(true);
@@ -345,13 +361,12 @@ export default function AdminPage() {
   };
 
   const handleAddProduct = async () => {
-    if (!newProduct.name) return alert("El nombre del producto es requerido");
-    if (!newProduct.code) return alert("El código del producto es requerido");
-    if (!newProduct.slug) return alert("El slug del producto es requerido");
-    if (!newProduct.description) return alert("La descripción del producto es requerida");
-    if (!newProduct.sku) return alert("El SKU del producto es requerido");
-    if (!newProduct.categoryId) return alert("La categoría del producto es requerida");
-    if (!newProduct.brandId) return alert("La marca del producto es requerida");
+    setProductSubmitAttempted(true);
+    const errors = validateForm(newProduct, productValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
 
     try {
       setProductsLoading(true);
@@ -368,9 +383,9 @@ export default function AdminPage() {
         if (data.success) {
           await fetchProducts();
           setEditingProduct(null);
-          alert("¡Producto actualizado exitosamente!");
+          showSuccess("¡Producto actualizado exitosamente!");
         } else {
-          setProductsError(data.error || "Error al actualizar el producto");
+          showError(data.error || "Error al actualizar el producto");
         }
       } else {
         // Crear nuevo product
@@ -383,9 +398,9 @@ export default function AdminPage() {
         const data = await response.json();
         if (data.success) {
           await fetchProducts();
-          alert("¡Producto agregado exitosamente!");
+          showSuccess("¡Producto agregado exitosamente!");
         } else {
-          setProductsError(data.error || "Error al crear el producto");
+          showError(data.error || "Error al crear el producto");
         }
       }
 
@@ -403,11 +418,12 @@ export default function AdminPage() {
         imageUrl: "",
       });
       setProductSlugTouched(false);
+      setProductSubmitAttempted(false);
       const nextSuffix = randomSlugSuffix();
       setProductSlugSuffix(nextSuffix);
       setProductSlugMaxLength(nextSuffix.length);
     } catch (err) {
-      setProductsError("Error al guardar el producto");
+      showError("Error al guardar el producto");
       console.error(err);
     } finally {
       setProductsLoading(false);
@@ -431,6 +447,7 @@ export default function AdminPage() {
     });
     setProductSlugTouched(true);
     setProductSlugMaxLength(product.slug.length);
+    setProductSubmitAttempted(false);
     setActiveTab("products");
   };
 
@@ -448,12 +465,12 @@ export default function AdminPage() {
       const data = await response.json();
       if (data.success) {
         await fetchProducts();
-        alert("¡Producto eliminado exitosamente!");
+        showSuccess("¡Producto eliminado exitosamente!");
       } else {
-        setProductsError(data.error || "Error al eliminar el producto");
+        showError(data.error || "Error al eliminar el producto");
       }
     } catch (err) {
-      setProductsError("Error al eliminar el producto");
+      showError("Error al eliminar el producto");
       console.error(err);
     } finally {
       setProductsLoading(false);
@@ -480,10 +497,10 @@ export default function AdminPage() {
       if (data.success) {
         setNewProduct((prev) => ({ ...prev, imageUrl: data.data.url }));
       } else {
-        setProductsError(data.error || "Error al subir la imagen");
+        showError(data.error || "Error al subir la imagen");
       }
     } catch (err) {
-      setProductsError("Error al subir la imagen");
+      showError("Error al subir la imagen");
       console.error(err);
     } finally {
       setProductImageUploading(false);
@@ -662,29 +679,18 @@ export default function AdminPage() {
       {/* Products Tab */}
       {activeTab === "products" && (
         <div>
-          {productsError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {productsError}
-              <button
-                onClick={() => setProductsError(null)}
-                className="float-right font-bold text-red-700 hover:text-red-900"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
               {editingProduct ? "Editar Producto" : "Agregar Nuevo Producto"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Nombre del Producto"
+              <Input
+                label="Nombre del Producto"
+                required
                 value={newProduct.name}
-                onChange={(e) => {
-                  const name = e.target.value;
+                validate={productValidators.name}
+                forceTouched={productSubmitAttempted}
+                onChange={(name) => {
                   if (productSlugTouched) {
                     setNewProduct((prev) => ({ ...prev, name }));
                     return;
@@ -696,77 +702,68 @@ export default function AdminPage() {
                   setProductSlugMaxLength(slug.length);
                   setNewProduct((prev) => ({ ...prev, name, slug }));
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="Slug"
+              <Input
+                label="Slug"
+                required
                 value={newProduct.slug}
+                validate={productValidators.slug}
+                forceTouched={productSubmitAttempted}
                 maxLength={productSlugMaxLength}
-                onChange={(e) => {
+                helperText={`Máximo ${productSlugMaxLength} caracteres`}
+                onChange={(value) => {
                   setProductSlugTouched(true);
-                  const sanitized = slugify(e.target.value).slice(0, productSlugMaxLength);
+                  const sanitized = slugify(value).slice(0, productSlugMaxLength);
                   setNewProduct({ ...newProduct, slug: sanitized });
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="Código del Producto"
+              <Input
+                label="Código del Producto"
+                required
                 value={newProduct.code}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, code: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                validate={productValidators.code}
+                forceTouched={productSubmitAttempted}
+                onChange={(code) => setNewProduct({ ...newProduct, code })}
               />
-              <input
-                type="text"
-                placeholder="SKU"
+              <Input
+                label="SKU"
+                required
                 value={newProduct.sku}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, sku: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                validate={productValidators.sku}
+                forceTouched={productSubmitAttempted}
+                onChange={(sku) => setNewProduct({ ...newProduct, sku })}
               />
-              <input
-                type="text"
-                placeholder="Descripción"
-                value={newProduct.description}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, description: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
+              <Input
+                label="Precio"
+                required
                 type="number"
-                placeholder="Precio"
                 value={newProduct.price}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    price: parseFloat(e.target.value),
-                  })
+                validate={productValidators.price}
+                forceTouched={productSubmitAttempted}
+                helperText="En USD, ej: 89.99"
+                onChange={(value) =>
+                  setNewProduct({ ...newProduct, price: parseFloat(value) || 0 })
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
+              <Input
+                label="Stock"
                 type="number"
-                placeholder="Stock"
                 value={newProduct.stock}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    stock: parseInt(e.target.value),
-                  })
+                validate={productValidators.stock}
+                forceTouched={productSubmitAttempted}
+                onChange={(value) =>
+                  setNewProduct({ ...newProduct, stock: parseInt(value) || 0 })
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <select
+              <Select
+                label="Categoría"
+                required
                 value={newProduct.categoryId}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, categoryId: e.target.value })
+                validate={productValidators.categoryId}
+                forceTouched={productSubmitAttempted}
+                onChange={(categoryId) =>
+                  setNewProduct({ ...newProduct, categoryId })
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Selecciona una categoría</option>
                 {categories.map((cat) => (
@@ -774,13 +771,14 @@ export default function AdminPage() {
                     {cat.name}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
+                label="Marca"
+                required
                 value={newProduct.brandId}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, brandId: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                validate={productValidators.brandId}
+                forceTouched={productSubmitAttempted}
+                onChange={(brandId) => setNewProduct({ ...newProduct, brandId })}
               >
                 <option value="">Selecciona una marca</option>
                 {brands.map((brand) => (
@@ -788,27 +786,35 @@ export default function AdminPage() {
                     {brand.name}
                   </option>
                 ))}
-              </select>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={newProduct.featured}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, featured: e.target.checked })
-                  }
-                />
-                Producto destacado
-              </label>
+              </Select>
+              <Checkbox
+                label="Producto destacado"
+                checked={newProduct.featured}
+                onChange={(featured) => setNewProduct({ ...newProduct, featured })}
+              />
             </div>
 
             <div className="mb-4">
-              <h3 className="font-semibold text-sm mb-2">Imagen del Producto</h3>
+              <Textarea
+                label="Descripción"
+                required
+                value={newProduct.description}
+                validate={productValidators.description}
+                forceTouched={productSubmitAttempted}
+                onChange={(description) =>
+                  setNewProduct({ ...newProduct, description })
+                }
+              />
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-sm mb-2 text-label">Imagen del Producto</h3>
               <div className="flex items-center gap-4">
                 {newProduct.imageUrl ? (
                   <img
                     src={newProduct.imageUrl}
                     alt="Vista previa"
-                    className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                    className="w-16 h-16 object-cover rounded-lg border border-border"
                   />
                 ) : (
                   <ImagePlaceholder size={64} />
@@ -822,7 +828,7 @@ export default function AdminPage() {
                     className="text-sm"
                   />
                   {productImageUploading && (
-                    <p className="text-sm text-gray-500 mt-1">Subiendo imagen...</p>
+                    <p className="text-sm text-muted mt-1">Subiendo imagen...</p>
                   )}
                   {newProduct.imageUrl && !productImageUploading && (
                     <button
@@ -830,7 +836,7 @@ export default function AdminPage() {
                       onClick={() =>
                         setNewProduct((prev) => ({ ...prev, imageUrl: "" }))
                       }
-                      className="text-sm text-red-600 hover:underline mt-1"
+                      className="text-sm text-danger hover:underline mt-1"
                     >
                       Quitar imagen
                     </button>
@@ -869,6 +875,7 @@ export default function AdminPage() {
                       imageUrl: "",
                     });
                     setProductSlugTouched(false);
+                    setProductSubmitAttempted(false);
                     const nextSuffix = randomSlugSuffix();
                     setProductSlugSuffix(nextSuffix);
                     setProductSlugMaxLength(nextSuffix.length);
