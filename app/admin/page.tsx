@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { mockProducts, mockBanners } from "@/data/mock";
+import { mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 
@@ -19,7 +19,7 @@ export default function AdminPage() {
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [products, setProducts] = useState<any[]>(mockProducts);
+  const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -56,10 +56,11 @@ export default function AdminPage() {
     description: "",
   });
 
-  // Cargar brands y categories del API
+  // Cargar brands, categories y products del API
   useEffect(() => {
     fetchBrands();
     fetchCategories();
+    fetchProducts();
   }, []);
 
   const fetchBrands = async () => {
@@ -99,6 +100,26 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setCategoriesLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      setProductsLoading(true);
+      setProductsError(null);
+      const response = await fetch("/api/products");
+      const data = await response.json();
+
+      if (data.success) {
+        setProducts(data.data);
+      } else {
+        setProductsError(data.error || "Error al obtener los productos");
+      }
+    } catch (err) {
+      setProductsError("Error al conectar con el servidor");
+      console.error(err);
+    } finally {
+      setProductsLoading(false);
     }
   };
 
@@ -306,6 +327,7 @@ export default function AdminPage() {
 
       const data = await response.json();
       if (data.success) {
+        await fetchProducts();
         alert("¡Producto agregado exitosamente!");
       } else {
         setProductsError(data.error || "Error al crear el producto");
@@ -666,48 +688,60 @@ export default function AdminPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Nombre
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Precio
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4">{product.name}</td>
-                    <td className="px-6 py-4">${product.price.toFixed(2)}</td>
-                    <td className="px-6 py-4">{product.stock}</td>
-                    <td className="px-6 py-4">
-                      {categories.find((c) => c.id === product.categoryId)?.name}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        Eliminar
-                      </Button>
-                    </td>
+            {productsLoading && products.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Cargando productos...
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Nombre
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Precio
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Stock
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Categoría
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4">{product.name}</td>
+                      <td className="px-6 py-4">${Number(product.price).toFixed(2)}</td>
+                      <td className="px-6 py-4">{product.stock}</td>
+                      <td className="px-6 py-4">
+                        {categories.find((c) => c.id === product.categoryId)?.name}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          disabled={productsLoading}
+                        >
+                          Eliminar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {products.length === 0 && !productsLoading && (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Aún no hay productos. ¡Crea tu primer producto!
+              </div>
+            )}
           </div>
         </div>
       )}
