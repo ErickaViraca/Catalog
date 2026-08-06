@@ -6,6 +6,7 @@ import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { useToast } from "@/components/common/ToastProvider";
 import { Input, Textarea, Select, Checkbox } from "@/components/form";
+import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 import {
   combine,
@@ -538,7 +539,7 @@ export default function AdminPage() {
       {/* Brands Tab */}
       {activeTab === "brands" && (
         <div>
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
             <h2 className="text-2xl font-bold mb-6">
               {editingBrand ? "Editar Marca" : "Agregar Nueva Marca"}
             </h2>
@@ -673,7 +674,7 @@ export default function AdminPage() {
       {/* Products Tab */}
       {activeTab === "products" && (
         <div>
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
             <h2 className="text-2xl font-bold mb-6">
               {editingProduct ? "Editar Producto" : "Agregar Nuevo Producto"}
             </h2>
@@ -955,7 +956,7 @@ export default function AdminPage() {
       {/* Categories Tab */}
       {activeTab === "categories" && (
         <div>
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
             <h2 className="text-2xl font-bold mb-6">
               {editingCategory ? "Editar Categoría" : "Agregar Nueva Categoría"}
             </h2>

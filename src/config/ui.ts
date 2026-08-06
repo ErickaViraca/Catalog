@@ -32,6 +32,9 @@ export const FORM_STYLES = {
 
   fieldWrapper: "relative",
   validationIconWrapper: "absolute inset-y-0 right-0 flex items-center pr-3",
+
+  // Padding de la tarjeta que envuelve cada formulario (Brand/Category/Product)
+  cardPadding: "p-8",
 } as const;
 
 export const BUTTON_SIZES = {
