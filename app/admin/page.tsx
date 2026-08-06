@@ -4,7 +4,19 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
+import { useToast } from "@/components/common/ToastProvider";
+import { Input, Textarea, Select, Checkbox } from "@/components/form";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
+import {
+  combine,
+  required,
+  minLength,
+  slugFormat,
+  positiveNumber,
+  nonNegativeInteger,
+  selected,
+  validateForm,
+} from "@/src/lib/validators";
 
 type Tab = "brands" | "products" | "categories" | "banners";
 
@@ -16,10 +28,11 @@ const TAB_LABELS: Record<Tab, string> = {
 };
 
 export default function AdminPage() {
+  const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("brands");
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [brandSubmitAttempted, setBrandSubmitAttempted] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
@@ -52,6 +65,11 @@ export default function AdminPage() {
     description: "",
   });
 
+  const brandValidators = {
+    name: combine(required("El nombre"), minLength(2, "El nombre")),
+    slug: combine(required("El slug"), slugFormat("El slug")),
+  };
+
   const [newCategory, setNewCategory] = useState({
     name: "",
     slug: "",
@@ -69,17 +87,16 @@ export default function AdminPage() {
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await fetch("/api/brands");
       const data = await response.json();
 
       if (data.success) {
         setBrands(data.data);
       } else {
-        setError(data.error || "Error al obtener las marcas");
+        showError(data.error || "Error al obtener las marcas");
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      showError("Error al conectar con el servidor");
       console.error(err);
     } finally {
       setLoading(false);
@@ -141,8 +158,12 @@ export default function AdminPage() {
   });
 
   const handleAddBrand = async () => {
-    if (!newBrand.name) return alert("El nombre de la marca es requerido");
-    if (!newBrand.slug) return alert("El slug de la marca es requerido");
+    setBrandSubmitAttempted(true);
+    const errors = validateForm(newBrand, brandValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -159,9 +180,9 @@ export default function AdminPage() {
         if (data.success) {
           await fetchBrands();
           setEditingBrand(null);
-          alert("¡Marca actualizada exitosamente!");
+          showSuccess("¡Marca actualizada exitosamente!");
         } else {
-          setError(data.error || "Error al actualizar la marca");
+          showError(data.error || "Error al actualizar la marca");
         }
       } else {
         // Crear nuevo brand
@@ -174,16 +195,17 @@ export default function AdminPage() {
         const data = await response.json();
         if (data.success) {
           await fetchBrands();
-          alert("¡Marca creada exitosamente!");
+          showSuccess("¡Marca creada exitosamente!");
         } else {
-          setError(data.error || "Error al crear la marca");
+          showError(data.error || "Error al crear la marca");
         }
       }
 
       setNewBrand({ name: "", slug: "", logo: "", description: "" });
       setBrandSlugTouched(false);
+      setBrandSubmitAttempted(false);
     } catch (err) {
-      setError("Error al guardar la marca");
+      showError("Error al guardar la marca");
       console.error(err);
     } finally {
       setLoading(false);
@@ -194,6 +216,7 @@ export default function AdminPage() {
     setEditingBrand(brand);
     setNewBrand(brand);
     setBrandSlugTouched(true);
+    setBrandSubmitAttempted(false);
     setActiveTab("brands");
   };
 
@@ -211,12 +234,12 @@ export default function AdminPage() {
       const data = await response.json();
       if (data.success) {
         await fetchBrands();
-        alert("¡Marca eliminada exitosamente!");
+        showSuccess("¡Marca eliminada exitosamente!");
       } else {
-        setError(data.error || "Error al eliminar la marca");
+        showError(data.error || "Error al eliminar la marca");
       }
     } catch (err) {
-      setError("Error al eliminar la marca");
+      showError("Error al eliminar la marca");
       console.error(err);
     } finally {
       setLoading(false);
@@ -470,7 +493,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
               activeTab === tab
-                ? "border-blue-600 text-blue-600"
+                ? "border-primary text-primary"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -482,63 +505,48 @@ export default function AdminPage() {
       {/* Brands Tab */}
       {activeTab === "brands" && (
         <div>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
-              <button
-                onClick={() => setError(null)}
-                className="float-right font-bold text-red-700 hover:text-red-900"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
               {editingBrand ? "Editar Marca" : "Agregar Nueva Marca"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Nombre de la Marca"
+              <Input
+                label="Nombre de la Marca"
+                required
                 value={newBrand.name}
-                onChange={(e) => {
-                  const name = e.target.value;
+                validate={brandValidators.name}
+                forceTouched={brandSubmitAttempted}
+                onChange={(name) => {
                   setNewBrand((prev) => ({
                     ...prev,
                     name,
                     slug: brandSlugTouched ? prev.slug : slugify(name),
                   }));
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="Slug"
+              <Input
+                label="Slug"
+                required
                 value={newBrand.slug}
-                onChange={(e) => {
+                validate={brandValidators.slug}
+                forceTouched={brandSubmitAttempted}
+                helperText="Se usa en la URL, ej: mi-marca"
+                onChange={(value) => {
                   setBrandSlugTouched(true);
-                  setNewBrand({ ...newBrand, slug: slugify(e.target.value) });
+                  setNewBrand({ ...newBrand, slug: slugify(value) });
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="URL del Logo"
+              <Input
+                label="URL del Logo"
                 value={newBrand.logo}
-                onChange={(e) =>
-                  setNewBrand({ ...newBrand, logo: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(logo) => setNewBrand({ ...newBrand, logo })}
               />
-              <textarea
-                placeholder="Descripción"
+              <Textarea
+                label="Descripción"
                 value={newBrand.description}
-                onChange={(e) =>
-                  setNewBrand({ ...newBrand, description: e.target.value })
+                onChange={(description) =>
+                  setNewBrand({ ...newBrand, description })
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex gap-2">
@@ -552,6 +560,7 @@ export default function AdminPage() {
                     setEditingBrand(null);
                     setNewBrand({ name: "", slug: "", logo: "", description: "" });
                     setBrandSlugTouched(false);
+                    setBrandSubmitAttempted(false);
                   }}
                   disabled={loading}
                 >

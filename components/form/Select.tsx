@@ -18,6 +18,7 @@ interface SelectProps
   value: string;
   onChange: (value: string) => void;
   children: ReactNode;
+  forceTouched?: boolean;
 }
 
 export function Select({
@@ -28,12 +29,14 @@ export function Select({
   validate,
   value,
   onChange,
+  forceTouched = false,
   id,
   className = "",
   children,
   ...rest
 }: SelectProps) {
-  const [touched, setTouched] = useState(false);
+  const [blurred, setBlurred] = useState(false);
+  const touched = blurred || forceTouched;
   const error = touched && validate ? validate(value) : null;
 
   const selectId = id || label?.toLowerCase().replace(/\s+/g, "-");
@@ -51,7 +54,7 @@ export function Select({
         id={selectId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={() => setTouched(true)}
+        onBlur={() => setBlurred(true)}
         className={`${FORM_STYLES.inputBase} ${FORM_SIZES[size].input} ${stateStyles} ${className}`}
         {...rest}
       >

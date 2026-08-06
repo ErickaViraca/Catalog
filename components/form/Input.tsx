@@ -18,6 +18,9 @@ interface InputProps
   validate?: Validator;
   value: string | number;
   onChange: (value: string) => void;
+  // Fuerza a mostrar el estado de validación aunque el usuario no haya
+  // hecho blur todavía — se usa al intentar enviar el formulario.
+  forceTouched?: boolean;
 }
 
 // Input de texto/número reutilizable: label + asterisco + ícono ✓/✗ +
@@ -32,11 +35,13 @@ export function Input({
   validate,
   value,
   onChange,
+  forceTouched = false,
   id,
   className = "",
   ...rest
 }: InputProps) {
-  const [touched, setTouched] = useState(false);
+  const [blurred, setBlurred] = useState(false);
+  const touched = blurred || forceTouched;
 
   const error = touched && validate ? validate(value) : null;
   const hasValue = String(value ?? "").length > 0;
@@ -64,7 +69,7 @@ export function Input({
           id={inputId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={() => setBlurred(true)}
           className={`${FORM_STYLES.inputBase} ${FORM_SIZES[size].input} ${stateStyles} ${
             validate ? "pr-10" : ""
           } ${className}`}

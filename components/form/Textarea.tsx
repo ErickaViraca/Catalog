@@ -17,6 +17,7 @@ interface TextareaProps
   validate?: Validator;
   value: string;
   onChange: (value: string) => void;
+  forceTouched?: boolean;
 }
 
 export function Textarea({
@@ -27,11 +28,13 @@ export function Textarea({
   validate,
   value,
   onChange,
+  forceTouched = false,
   id,
   className = "",
   ...rest
 }: TextareaProps) {
-  const [touched, setTouched] = useState(false);
+  const [blurred, setBlurred] = useState(false);
+  const touched = blurred || forceTouched;
   const error = touched && validate ? validate(value) : null;
 
   const textareaId = id || label?.toLowerCase().replace(/\s+/g, "-");
@@ -49,7 +52,7 @@ export function Textarea({
         id={textareaId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={() => setTouched(true)}
+        onBlur={() => setBlurred(true)}
         className={`${FORM_STYLES.inputBase} ${FORM_SIZES[size].input} ${stateStyles} ${className}`}
         {...rest}
       />
