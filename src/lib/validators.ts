@@ -67,6 +67,16 @@ export function slugFormat(fieldLabel: string): Validator {
   };
 }
 
+export function alphanumericFormat(fieldLabel: string): Validator {
+  return (value) => {
+    if (typeof value !== "string" || value.length === 0) return null;
+    if (!/^[a-zA-Z0-9-]+$/.test(value)) {
+      return `${fieldLabel} solo puede tener letras, números y guiones`;
+    }
+    return null;
+  };
+}
+
 export function selected(fieldLabel: string): Validator {
   return (value) => {
     if (!value) return `Selecciona ${fieldLabel}`;

@@ -12,6 +12,7 @@ import {
   required,
   minLength,
   maxLength,
+  alphanumericFormat,
   nonNegativeInteger,
   selected,
   validateForm,
@@ -154,7 +155,11 @@ export default function AdminPage() {
 
   const productValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
-    code: required("El código"),
+    code: combine(
+      required("El código de fabricante"),
+      maxLength(50, "El código de fabricante"),
+      alphanumericFormat("El código de fabricante")
+    ),
     description: combine(required("La descripción"), minLength(10, "La descripción")),
     price: (value: unknown) => {
       const num = Number(value);
@@ -692,11 +697,13 @@ export default function AdminPage() {
                 }}
               />
               <Input
-                label="Código del Producto"
+                label="Código de Fabricante"
                 required
                 value={newProduct.code}
                 validate={productValidators.code}
                 forceTouched={productSubmitAttempted}
+                maxLength={50}
+                helperText="Código del fabricante (ej. Xiaomi), máx 50 caracteres"
                 onChange={(code) => setNewProduct({ ...newProduct, code })}
               />
               <Input

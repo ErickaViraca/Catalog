@@ -60,7 +60,15 @@ export class ProductService {
     }
 
     if (!data.code || data.code.trim().length === 0) {
-      throw new Error("El código del producto es requerido");
+      throw new Error("El código de fabricante es requerido");
+    }
+
+    if (data.code.trim().length > 50) {
+      throw new Error("El código de fabricante no puede superar los 50 caracteres");
+    }
+
+    if (!/^[a-zA-Z0-9-]+$/.test(data.code.trim())) {
+      throw new Error("El código de fabricante solo puede tener letras, números y guiones");
     }
 
     if (!data.slug || data.slug.trim().length === 0) {
@@ -190,6 +198,15 @@ export class ProductService {
       const brand = await brandRepository.findById(data.brandId);
       if (brand.length === 0) {
         throw new Error("La marca seleccionada no existe");
+      }
+    }
+
+    if (data.code) {
+      if (data.code.trim().length > 50) {
+        throw new Error("El código de fabricante no puede superar los 50 caracteres");
+      }
+      if (!/^[a-zA-Z0-9-]+$/.test(data.code.trim())) {
+        throw new Error("El código de fabricante solo puede tener letras, números y guiones");
       }
     }
 
