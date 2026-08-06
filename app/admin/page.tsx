@@ -11,7 +11,6 @@ import {
   combine,
   required,
   minLength,
-  slugFormat,
   nonNegativeInteger,
   selected,
   validateForm,
@@ -47,15 +46,10 @@ export default function AdminPage() {
   // Mientras el usuario no edite el slug a mano, se autogenera a partir del nombre
   const [brandSlugTouched, setBrandSlugTouched] = useState(false);
   const [categorySlugTouched, setCategorySlugTouched] = useState(false);
+  // El slug de products no es un campo editable: se autogenera con las
+  // primeras 2 palabras del nombre + un sufijo aleatorio fijo por borrador
   const [productSlugTouched, setProductSlugTouched] = useState(false);
-  // Sufijo aleatorio fijo para el borrador actual: el nombre puede cambiar
-  // mientras se escribe, pero el sufijo no se regenera en cada letra
   const [productSlugSuffix, setProductSlugSuffix] = useState(() => randomSlugSuffix());
-  // Tope de caracteres para edición manual del slug: el mismo largo que
-  // tendría el slug autogenerado (2 palabras + sufijo)
-  const [productSlugMaxLength, setProductSlugMaxLength] = useState(
-    () => productSlugSuffix.length
-  );
 
   const [newBrand, setNewBrand] = useState({
     name: "",
@@ -160,7 +154,6 @@ export default function AdminPage() {
   const productValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
     code: required("El código"),
-    slug: combine(required("El slug"), slugFormat("El slug")),
     description: combine(required("La descripción"), minLength(10, "La descripción")),
     price: (value: unknown) => {
       const num = Number(value);
@@ -417,9 +410,7 @@ export default function AdminPage() {
       });
       setProductSlugTouched(false);
       setProductSubmitAttempted(false);
-      const nextSuffix = randomSlugSuffix();
-      setProductSlugSuffix(nextSuffix);
-      setProductSlugMaxLength(nextSuffix.length);
+      setProductSlugSuffix(randomSlugSuffix());
     } catch (err) {
       showError("Error al guardar el producto");
       console.error(err);
@@ -444,7 +435,6 @@ export default function AdminPage() {
       imageUrl: product.imageUrl || "",
     });
     setProductSlugTouched(true);
-    setProductSlugMaxLength(product.slug.length);
     setProductSubmitAttempted(false);
     setActiveTab("products");
   };
@@ -685,22 +675,7 @@ export default function AdminPage() {
                   const slug = base
                     ? `${base}-${productSlugSuffix}`
                     : productSlugSuffix;
-                  setProductSlugMaxLength(slug.length);
                   setNewProduct((prev) => ({ ...prev, name, slug }));
-                }}
-              />
-              <Input
-                label="Slug"
-                required
-                value={newProduct.slug}
-                validate={productValidators.slug}
-                forceTouched={productSubmitAttempted}
-                maxLength={productSlugMaxLength}
-                helperText={`Máximo ${productSlugMaxLength} caracteres`}
-                onChange={(value) => {
-                  setProductSlugTouched(true);
-                  const sanitized = slugify(value).slice(0, productSlugMaxLength);
-                  setNewProduct({ ...newProduct, slug: sanitized });
                 }}
               />
               <Input
@@ -862,9 +837,7 @@ export default function AdminPage() {
                     });
                     setProductSlugTouched(false);
                     setProductSubmitAttempted(false);
-                    const nextSuffix = randomSlugSuffix();
-                    setProductSlugSuffix(nextSuffix);
-                    setProductSlugMaxLength(nextSuffix.length);
+                    setProductSlugSuffix(randomSlugSuffix());
                   }}
                   disabled={productsLoading}
                 >
