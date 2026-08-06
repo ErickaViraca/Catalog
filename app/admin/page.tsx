@@ -40,8 +40,8 @@ export default function AdminPage() {
   const [productImageUploading, setProductImageUploading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [categorySubmitAttempted, setCategorySubmitAttempted] = useState(false);
   const [banners, setBanners] = useState<any[]>(mockBanners);
   const [editingBrand, setEditingBrand] = useState<any>(null);
 
@@ -77,6 +77,11 @@ export default function AdminPage() {
     description: "",
   });
 
+  const categoryValidators = {
+    name: combine(required("El nombre"), minLength(2, "El nombre")),
+    slug: combine(required("El slug"), slugFormat("El slug")),
+  };
+
   // Cargar brands, categories y products del API
   useEffect(() => {
     fetchBrands();
@@ -106,17 +111,16 @@ export default function AdminPage() {
   const fetchCategories = async () => {
     try {
       setCategoriesLoading(true);
-      setCategoriesError(null);
       const response = await fetch("/api/categories");
       const data = await response.json();
 
       if (data.success) {
         setCategories(data.data);
       } else {
-        setCategoriesError(data.error || "Error al obtener las categorías");
+        showError(data.error || "Error al obtener las categorías");
       }
     } catch (err) {
-      setCategoriesError("Error al conectar con el servidor");
+      showError("Error al conectar con el servidor");
       console.error(err);
     } finally {
       setCategoriesLoading(false);
@@ -247,8 +251,12 @@ export default function AdminPage() {
   };
 
   const handleAddCategory = async () => {
-    if (!newCategory.name) return alert("El nombre de la categoría es requerido");
-    if (!newCategory.slug) return alert("El slug de la categoría es requerido");
+    setCategorySubmitAttempted(true);
+    const errors = validateForm(newCategory, categoryValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
 
     try {
       setCategoriesLoading(true);
@@ -265,9 +273,9 @@ export default function AdminPage() {
         if (data.success) {
           await fetchCategories();
           setEditingCategory(null);
-          alert("¡Categoría actualizada exitosamente!");
+          showSuccess("¡Categoría actualizada exitosamente!");
         } else {
-          setCategoriesError(data.error || "Error al actualizar la categoría");
+          showError(data.error || "Error al actualizar la categoría");
         }
       } else {
         // Crear nueva category
@@ -280,16 +288,17 @@ export default function AdminPage() {
         const data = await response.json();
         if (data.success) {
           await fetchCategories();
-          alert("¡Categoría creada exitosamente!");
+          showSuccess("¡Categoría creada exitosamente!");
         } else {
-          setCategoriesError(data.error || "Error al crear la categoría");
+          showError(data.error || "Error al crear la categoría");
         }
       }
 
       setNewCategory({ name: "", slug: "", image: "", description: "" });
       setCategorySlugTouched(false);
+      setCategorySubmitAttempted(false);
     } catch (err) {
-      setCategoriesError("Error al guardar la categoría");
+      showError("Error al guardar la categoría");
       console.error(err);
     } finally {
       setCategoriesLoading(false);
@@ -305,6 +314,7 @@ export default function AdminPage() {
       description: category.description || "",
     });
     setCategorySlugTouched(true);
+    setCategorySubmitAttempted(false);
     setActiveTab("categories");
   };
 
@@ -322,12 +332,12 @@ export default function AdminPage() {
       const data = await response.json();
       if (data.success) {
         await fetchCategories();
-        alert("¡Categoría eliminada exitosamente!");
+        showSuccess("¡Categoría eliminada exitosamente!");
       } else {
-        setCategoriesError(data.error || "Error al eliminar la categoría");
+        showError(data.error || "Error al eliminar la categoría");
       }
     } catch (err) {
-      setCategoriesError("Error al eliminar la categoría");
+      showError("Error al eliminar la categoría");
       console.error(err);
     } finally {
       setCategoriesLoading(false);
@@ -957,63 +967,48 @@ export default function AdminPage() {
       {/* Categories Tab */}
       {activeTab === "categories" && (
         <div>
-          {categoriesError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {categoriesError}
-              <button
-                onClick={() => setCategoriesError(null)}
-                className="float-right font-bold text-red-700 hover:text-red-900"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">
               {editingCategory ? "Editar Categoría" : "Agregar Nueva Categoría"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Nombre de la Categoría"
+              <Input
+                label="Nombre de la Categoría"
+                required
                 value={newCategory.name}
-                onChange={(e) => {
-                  const name = e.target.value;
+                validate={categoryValidators.name}
+                forceTouched={categorySubmitAttempted}
+                onChange={(name) => {
                   setNewCategory((prev) => ({
                     ...prev,
                     name,
                     slug: categorySlugTouched ? prev.slug : slugify(name),
                   }));
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="Slug"
+              <Input
+                label="Slug"
+                required
                 value={newCategory.slug}
-                onChange={(e) => {
+                validate={categoryValidators.slug}
+                forceTouched={categorySubmitAttempted}
+                helperText="Se usa en la URL, ej: mi-categoria"
+                onChange={(value) => {
                   setCategorySlugTouched(true);
-                  setNewCategory({ ...newCategory, slug: slugify(e.target.value) });
+                  setNewCategory({ ...newCategory, slug: slugify(value) });
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <input
-                type="text"
-                placeholder="URL de la Imagen"
+              <Input
+                label="URL de la Imagen"
                 value={newCategory.image}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, image: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(image) => setNewCategory({ ...newCategory, image })}
               />
-              <textarea
-                placeholder="Descripción"
+              <Textarea
+                label="Descripción"
                 value={newCategory.description}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, description: e.target.value })
+                onChange={(description) =>
+                  setNewCategory({ ...newCategory, description })
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex gap-2">
@@ -1031,6 +1026,7 @@ export default function AdminPage() {
                     setEditingCategory(null);
                     setNewCategory({ name: "", slug: "", image: "", description: "" });
                     setCategorySlugTouched(false);
+                    setCategorySubmitAttempted(false);
                   }}
                   disabled={categoriesLoading}
                 >
