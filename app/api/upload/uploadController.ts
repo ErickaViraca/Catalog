@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from "next/server";
+import { uploadService } from "@/src/services/uploadService";
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!file || !(file instanceof File)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "No se recibió ningún archivo",
+        },
+        { status: 400 }
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const url = await uploadService.uploadImage(buffer, file.name, file.type);
+
+    return NextResponse.json({
+      success: true,
+      data: { url },
+      message: "Imagen subida exitosamente",
+    });
+  } catch (error) {
+    console.error("POST /api/upload error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Error al subir la imagen",
+      },
+      { status: 400 }
+    );
+  }
+}
