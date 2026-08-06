@@ -66,7 +66,6 @@ export default function AdminPage() {
 
   const brandValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
-    slug: combine(required("El slug"), slugFormat("El slug")),
   };
 
   const [newCategory, setNewCategory] = useState({
@@ -78,7 +77,6 @@ export default function AdminPage() {
 
   const categoryValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
-    slug: combine(required("El slug"), slugFormat("El slug")),
   };
 
   // Cargar brands, categories y products del API
@@ -552,18 +550,6 @@ export default function AdminPage() {
                 }}
               />
               <Input
-                label="Slug"
-                required
-                value={newBrand.slug}
-                validate={brandValidators.slug}
-                forceTouched={brandSubmitAttempted}
-                helperText="Se usa en la URL, ej: mi-marca"
-                onChange={(value) => {
-                  setBrandSlugTouched(true);
-                  setNewBrand({ ...newBrand, slug: slugify(value) });
-                }}
-              />
-              <Input
                 label="URL del Logo"
                 value={newBrand.logo}
                 onChange={(logo) => setNewBrand({ ...newBrand, logo })}
@@ -991,18 +977,6 @@ export default function AdminPage() {
                     name,
                     slug: categorySlugTouched ? prev.slug : slugify(name),
                   }));
-                }}
-              />
-              <Input
-                label="Slug"
-                required
-                value={newCategory.slug}
-                validate={categoryValidators.slug}
-                forceTouched={categorySubmitAttempted}
-                helperText="Se usa en la URL, ej: mi-categoria"
-                onChange={(value) => {
-                  setCategorySlugTouched(true);
-                  setNewCategory({ ...newCategory, slug: slugify(value) });
                 }}
               />
               <Input
