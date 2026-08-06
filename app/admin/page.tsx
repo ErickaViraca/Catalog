@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
@@ -319,18 +320,37 @@ export default function AdminPage() {
     try {
       setProductsLoading(true);
 
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newProduct),
-      });
+      if (editingProduct) {
+        // Actualizar product existente
+        const response = await fetch("/api/products", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingProduct.id, ...newProduct }),
+        });
 
-      const data = await response.json();
-      if (data.success) {
-        await fetchProducts();
-        alert("¡Producto agregado exitosamente!");
+        const data = await response.json();
+        if (data.success) {
+          await fetchProducts();
+          setEditingProduct(null);
+          alert("¡Producto actualizado exitosamente!");
+        } else {
+          setProductsError(data.error || "Error al actualizar el producto");
+        }
       } else {
-        setProductsError(data.error || "Error al crear el producto");
+        // Crear nuevo product
+        const response = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newProduct),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchProducts();
+          alert("¡Producto agregado exitosamente!");
+        } else {
+          setProductsError(data.error || "Error al crear el producto");
+        }
       }
 
       setNewProduct({
@@ -357,8 +377,49 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter((p) => p.id !== id));
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      code: product.code,
+      slug: product.slug,
+      description: product.description,
+      price: Number(product.price),
+      stock: product.stock,
+      sku: product.sku,
+      categoryId: product.categoryId,
+      brandId: product.brandId,
+      featured: product.featured,
+    });
+    setProductSlugTouched(true);
+    setProductSlugMaxLength(product.slug.length);
+    setActiveTab("products");
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) return;
+
+    try {
+      setProductsLoading(true);
+      const response = await fetch("/api/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchProducts();
+        alert("¡Producto eliminado exitosamente!");
+      } else {
+        setProductsError(data.error || "Error al eliminar el producto");
+      }
+    } catch (err) {
+      setProductsError("Error al eliminar el producto");
+      console.error(err);
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
   return (
@@ -559,7 +620,9 @@ export default function AdminPage() {
           )}
 
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Agregar Nuevo Producto</h2>
+            <h2 className="text-2xl font-bold mb-6">
+              {editingProduct ? "Editar Producto" : "Agregar Nuevo Producto"}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <input
                 type="text"
@@ -682,9 +745,42 @@ export default function AdminPage() {
                 Producto destacado
               </label>
             </div>
-            <Button onClick={handleAddProduct} disabled={productsLoading}>
-              {productsLoading ? "Guardando..." : "Agregar Producto"}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleAddProduct} disabled={productsLoading}>
+                {productsLoading
+                  ? "Guardando..."
+                  : editingProduct
+                    ? "Actualizar Producto"
+                    : "Agregar Producto"}
+              </Button>
+              {editingProduct && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setNewProduct({
+                      name: "",
+                      code: "",
+                      slug: "",
+                      description: "",
+                      price: 0,
+                      stock: 0,
+                      sku: "",
+                      categoryId: categories[0]?.id || "",
+                      brandId: brands[0]?.id || "",
+                      featured: false,
+                    });
+                    setProductSlugTouched(false);
+                    const nextSuffix = randomSlugSuffix();
+                    setProductSlugSuffix(nextSuffix);
+                    setProductSlugMaxLength(nextSuffix.length);
+                  }}
+                  disabled={productsLoading}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -723,14 +819,24 @@ export default function AdminPage() {
                         {categories.find((c) => c.id === product.categoryId)?.name}
                       </td>
                       <td className="px-6 py-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteProduct(product.id)}
-                          disabled={productsLoading}
-                        >
-                          Eliminar
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditProduct(product)}
+                            disabled={productsLoading}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteProduct(product.id)}
+                            disabled={productsLoading}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
