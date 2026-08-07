@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CONTACT_INFO, SOCIAL_LINKS } from "@/src/config/contact";
+import { COMPANY_NAME, COMPANY_DESCRIPTION, CONTACT_INFO, SOCIAL_LINKS } from "@/src/config/contact";
 import {
   FacebookIcon,
   InstagramIcon,
@@ -15,10 +15,8 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">MiTiendaXiaomi</h3>
-            <p className="text-gray-400 text-sm">
-              Tu fuente confiable de accesorios tecnológicos de calidad.
-            </p>
+            <h3 className="font-bold text-lg mb-4">{COMPANY_NAME}</h3>
+            <p className="text-gray-400 text-sm">{COMPANY_DESCRIPTION}</p>
             <div className="flex gap-3 mt-4">
               <a
                 href={SOCIAL_LINKS.facebook}
@@ -100,7 +98,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            &copy; 2026 MiTiendaXiaomi. Todos los derechos reservados. | Hecho con Next.js
+            &copy; 2026 {COMPANY_NAME}. Todos los derechos reservados. | Hecho con Next.js
           </p>
         </div>
       </div>

@@ -1,22 +1,26 @@
-// Datos de contacto y redes sociales de la tienda.
-// Fuente única usada por el Footer y la página /contact — un solo
-// lugar para actualizar si cambia una dirección, teléfono, email o red social.
-//
-// ⚠️ PLACEHOLDER: estos valores son de ejemplo. Reemplazar por los
-// datos reales antes de publicar en producción.
+// Datos de contacto, descripción y redes sociales de la tienda.
+// La info real vive en data/company.json (un JSON simple no amerita
+// una tabla en la DB) — este archivo solo la lee y le da forma para
+// el resto de la app. Para cambiar una dirección, teléfono, email o
+// red social, editar data/company.json — no hace falta tocar código.
+
+import company from "@/data/company.json";
+
+export const COMPANY_NAME = company.name;
+export const COMPANY_DESCRIPTION = company.description;
 
 export const CONTACT_INFO = {
-  addresses: [
-    "Dirección 1 (completar)",
-    "Dirección 2 (completar)",
-    "Dirección 3 (completar)",
-  ],
-  phones: ["+591 00000000", "+591 00000000"],
-  email: "contacto@mitiendaxiaomi.com",
+  addresses: company.addresses,
+  phones: company.phones,
+  email: company.email,
 };
 
+const primaryPhoneDigits = company.phones[0].replace(/\D/g, "");
+
 export const SOCIAL_LINKS = {
-  facebook: "https://facebook.com/mitiendaxiaomi",
-  whatsapp: "https://wa.me/59100000000",
-  instagram: "https://instagram.com/mitiendaxiaomi",
+  facebook: company.social.facebook,
+  instagram: company.social.instagram,
+  // El WhatsApp se arma a partir del primer teléfono, así no hay que
+  // mantener el mismo número en dos lugares distintos.
+  whatsapp: `https://wa.me/${primaryPhoneDigits}`,
 };

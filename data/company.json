@@ -1,0 +1,15 @@
+{
+  "name": "MiTiendaXiaomi",
+  "description": "Tu fuente confiable de accesorios tecnológicos de calidad.",
+  "addresses": [
+    "Av. Heroínas, edif. Sky Box, piso #8, of. 28",
+    "Av. Heroínas #456",
+    "Av. Santa Cruz #123"
+  ],
+  "phones": ["+591 65764676", "+591 65764679"],
+  "email": "mitiendaxiaomi@gmail.com",
+  "social": {
+    "facebook": "https://facebook.com/mitiendaxiaomi",
+    "instagram": "https://instagram.com/mitiendaxiaomi"
+  }
+}
