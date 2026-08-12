@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/src/lib/authGuard";
 import { uploadService } from "@/src/services/uploadService";
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");
