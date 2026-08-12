@@ -704,7 +704,7 @@ export default function AdminPage() {
                 validate={productValidators.code}
                 forceTouched={productSubmitAttempted}
                 maxLength={50}
-                helperText="Código del fabricante (ej. Xiaomi), máx 50 caracteres"
+                helperText="Código del fabricante, máx 50 caracteres"
                 onChange={(code) => setNewProduct({ ...newProduct, code })}
               />
               <Input
