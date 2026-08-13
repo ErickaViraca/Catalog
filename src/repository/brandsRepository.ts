@@ -3,7 +3,10 @@ import { db } from "../db/client";
 import { brands, NewBrand } from "../db/schema";
 
 export class BrandRepository {
-  async findAll() {
+  async findAll(includeInactive = false) {
+    if (includeInactive) {
+      return db.select().from(brands);
+    }
     return db.select().from(brands).where(eq(brands.active, true));
   }
 

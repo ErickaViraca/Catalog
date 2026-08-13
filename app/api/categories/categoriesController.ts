@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/src/lib/auth";
 import { requireAuth } from "@/src/lib/authGuard";
 import { categoryService } from "@/src/services/categoriesService";
 
@@ -27,8 +28,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // GET /api/categories
-    const categories = await categoryService.getAllCategories();
+    // GET /api/categories (?includeInactive=true solo tiene efecto si hay sesión)
+    let includeInactive = false;
+    if (url.searchParams.get("includeInactive") === "true") {
+      const session = await auth();
+      includeInactive = !!session?.user;
+    }
+
+    const categories = await categoryService.getAllCategories(includeInactive);
     return NextResponse.json({
       success: true,
       data: categories,
@@ -59,6 +66,7 @@ export async function POST(request: NextRequest) {
       image: body.image,
       description: body.description,
       parentCategoryId: body.parentCategoryId,
+      active: body.active,
     });
 
     return NextResponse.json(

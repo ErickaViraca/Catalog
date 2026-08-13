@@ -3,7 +3,10 @@ import { db } from "../db/client";
 import { categories, NewCategory } from "../db/schema";
 
 export class CategoryRepository {
-  async findAll() {
+  async findAll(includeInactive = false) {
+    if (includeInactive) {
+      return db.select().from(categories);
+    }
     return db.select().from(categories).where(eq(categories.active, true));
   }
 

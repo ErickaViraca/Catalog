@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { useToast } from "@/components/common/ToastProvider";
-import { Input, Textarea, Select, Checkbox } from "@/components/form";
+import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
+import { SortableHeader } from "@/components/admin/SortableHeader";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
+import { sortRows, SortDirection, SortState } from "@/src/lib/sortRows";
 import {
   combine,
   required,
@@ -59,6 +61,7 @@ export default function AdminPage() {
     slug: "",
     logo: "",
     description: "",
+    active: true,
   });
 
   const brandValidators = {
@@ -70,11 +73,32 @@ export default function AdminPage() {
     slug: "",
     image: "",
     description: "",
+    active: true,
   });
 
   const categoryValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
   };
+
+  // Ordenamiento de tablas: null = orden por defecto (el que devuelve la API)
+  const [brandSort, setBrandSort] = useState<SortState | null>(null);
+  const [categorySort, setCategorySort] = useState<SortState | null>(null);
+  const [productSort, setProductSort] = useState<SortState | null>(null);
+
+  // Clickear la misma flecha activa vuelve al orden por defecto
+  function toggleSort(
+    setSort: (updater: (prev: SortState | null) => SortState | null) => void
+  ) {
+    return (key: string, direction: SortDirection) => {
+      setSort((prev) =>
+        prev?.key === key && prev.direction === direction ? null : { key, direction }
+      );
+    };
+  }
+
+  const handleBrandSort = toggleSort(setBrandSort);
+  const handleCategorySort = toggleSort(setCategorySort);
+  const handleProductSort = toggleSort(setProductSort);
 
   // Cargar brands, categories y products del API
   useEffect(() => {
@@ -86,7 +110,7 @@ export default function AdminPage() {
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/brands");
+      const response = await fetch("/api/brands?includeInactive=true");
       const data = await response.json();
 
       if (data.success) {
@@ -105,7 +129,7 @@ export default function AdminPage() {
   const fetchCategories = async () => {
     try {
       setCategoriesLoading(true);
-      const response = await fetch("/api/categories");
+      const response = await fetch("/api/categories?includeInactive=true");
       const data = await response.json();
 
       if (data.success) {
@@ -231,7 +255,7 @@ export default function AdminPage() {
         }
       }
 
-      setNewBrand({ name: "", slug: "", logo: "", description: "" });
+      setNewBrand({ name: "", slug: "", logo: "", description: "", active: true });
       setBrandSlugTouched(false);
       setBrandSubmitAttempted(false);
     } catch (err) {
@@ -320,7 +344,7 @@ export default function AdminPage() {
         }
       }
 
-      setNewCategory({ name: "", slug: "", image: "", description: "" });
+      setNewCategory({ name: "", slug: "", image: "", description: "", active: true });
       setCategorySlugTouched(false);
       setCategorySubmitAttempted(false);
     } catch (err) {
@@ -338,6 +362,7 @@ export default function AdminPage() {
       slug: category.slug,
       image: category.image || "",
       description: category.description || "",
+      active: category.active,
     });
     setCategorySlugTouched(true);
     setCategorySubmitAttempted(false);
@@ -515,6 +540,36 @@ export default function AdminPage() {
     }
   };
 
+  const sortedBrands = useMemo(
+    () =>
+      sortRows(brands, brandSort, {
+        name: (b) => (b.name ?? "").toLowerCase(),
+        active: (b) => (b.active ? 1 : 0),
+      }),
+    [brands, brandSort]
+  );
+
+  const sortedCategories = useMemo(
+    () =>
+      sortRows(categories, categorySort, {
+        name: (c) => (c.name ?? "").toLowerCase(),
+        active: (c) => (c.active ? 1 : 0),
+      }),
+    [categories, categorySort]
+  );
+
+  const sortedProducts = useMemo(
+    () =>
+      sortRows(products, productSort, {
+        name: (p) => (p.name ?? "").toLowerCase(),
+        price: (p) => Number(p.price) || 0,
+        stock: (p) => Number(p.stock) || 0,
+        category: (p) =>
+          (categories.find((c) => c.id === p.categoryId)?.name ?? "").toLowerCase(),
+      }),
+    [products, productSort, categories]
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold mb-8">Panel de Administración</h1>
@@ -571,6 +626,13 @@ export default function AdminPage() {
                 }
               />
             </div>
+            <div className="mb-4">
+              <Switch
+                label="Marca activa"
+                checked={newBrand.active}
+                onChange={(active) => setNewBrand({ ...newBrand, active })}
+              />
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleAddBrand} disabled={loading}>
                 {loading ? "Guardando..." : editingBrand ? "Actualizar Marca" : "Agregar Marca"}
@@ -580,7 +642,7 @@ export default function AdminPage() {
                   variant="outline"
                   onClick={() => {
                     setEditingBrand(null);
-                    setNewBrand({ name: "", slug: "", logo: "", description: "" });
+                    setNewBrand({ name: "", slug: "", logo: "", description: "", active: true });
                     setBrandSlugTouched(false);
                     setBrandSubmitAttempted(false);
                   }}
@@ -601,25 +663,31 @@ export default function AdminPage() {
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Nombre
-                    </th>
+                    <SortableHeader
+                      label="Nombre"
+                      sortKey="name"
+                      currentSort={brandSort}
+                      onSort={handleBrandSort}
+                    />
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Slug
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Descripción
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Estado
-                    </th>
+                    <SortableHeader
+                      label="Estado"
+                      sortKey="active"
+                      currentSort={brandSort}
+                      onSort={handleBrandSort}
+                    />
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {brands.map((brand) => (
+                  {sortedBrands.map((brand) => (
                     <tr key={brand.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4 font-semibold">{brand.name}</td>
                       <td className="px-6 py-4 text-gray-600">{brand.slug}</td>
@@ -882,25 +950,37 @@ export default function AdminPage() {
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Imagen
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Nombre
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Precio
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Stock
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Categoría
-                    </th>
+                    <SortableHeader
+                      label="Nombre"
+                      sortKey="name"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
+                    <SortableHeader
+                      label="Precio"
+                      sortKey="price"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
+                    <SortableHeader
+                      label="Stock"
+                      sortKey="stock"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
+                    <SortableHeader
+                      label="Categoría"
+                      sortKey="category"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {sortedProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4">
                         {product.imageUrl ? (
@@ -988,6 +1068,13 @@ export default function AdminPage() {
                 }
               />
             </div>
+            <div className="mb-4">
+              <Switch
+                label="Categoría activa"
+                checked={newCategory.active}
+                onChange={(active) => setNewCategory({ ...newCategory, active })}
+              />
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleAddCategory} disabled={categoriesLoading}>
                 {categoriesLoading
@@ -1001,7 +1088,7 @@ export default function AdminPage() {
                   variant="outline"
                   onClick={() => {
                     setEditingCategory(null);
-                    setNewCategory({ name: "", slug: "", image: "", description: "" });
+                    setNewCategory({ name: "", slug: "", image: "", description: "", active: true });
                     setCategorySlugTouched(false);
                     setCategorySubmitAttempted(false);
                   }}
@@ -1022,25 +1109,31 @@ export default function AdminPage() {
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Nombre
-                    </th>
+                    <SortableHeader
+                      label="Nombre"
+                      sortKey="name"
+                      currentSort={categorySort}
+                      onSort={handleCategorySort}
+                    />
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Slug
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Descripción
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">
-                      Estado
-                    </th>
+                    <SortableHeader
+                      label="Estado"
+                      sortKey="active"
+                      currentSort={categorySort}
+                      onSort={handleCategorySort}
+                    />
                     <th className="px-6 py-3 text-left text-sm font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {categories.map((cat) => (
+                  {sortedCategories.map((cat) => (
                     <tr key={cat.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4 font-semibold">{cat.name}</td>
                       <td className="px-6 py-4 text-gray-600">{cat.slug}</td>

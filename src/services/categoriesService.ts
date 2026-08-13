@@ -2,8 +2,8 @@ import { categoryRepository } from "../repository/categoriesRepository";
 import { NewCategory } from "../db/schema";
 
 export class CategoryService {
-  async getAllCategories() {
-    return await categoryRepository.findAll();
+  async getAllCategories(includeInactive = false) {
+    return await categoryRepository.findAll(includeInactive);
   }
 
   async getCategoryById(id: string) {
@@ -22,6 +22,7 @@ export class CategoryService {
     image?: string;
     description?: string;
     parentCategoryId?: string;
+    active?: boolean;
   }) {
     if (!data.name || data.name.trim().length === 0) {
       throw new Error("El nombre de la categoría es requerido");
@@ -42,7 +43,7 @@ export class CategoryService {
       image: data.image,
       description: data.description,
       parentCategoryId: data.parentCategoryId,
-      active: true,
+      active: data.active ?? true,
     });
 
     return result[0] || null;
@@ -56,6 +57,7 @@ export class CategoryService {
       image: string;
       description: string;
       parentCategoryId: string;
+      active: boolean;
     }>
   ) {
     const existing = await this.getCategoryById(id);
@@ -77,6 +79,7 @@ export class CategoryService {
     if (data.description !== undefined) updateData.description = data.description;
     if (data.parentCategoryId !== undefined)
       updateData.parentCategoryId = data.parentCategoryId;
+    if (data.active !== undefined) updateData.active = data.active;
 
     const result = await categoryRepository.update(id, updateData);
     return result[0] || null;

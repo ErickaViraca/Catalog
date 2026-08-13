@@ -2,8 +2,8 @@ import { brandRepository } from "../repository/brandsRepository";
 import { NewBrand } from "../db/schema";
 
 export class BrandService {
-  async getAllBrands() {
-    return await brandRepository.findAll();
+  async getAllBrands(includeInactive = false) {
+    return await brandRepository.findAll(includeInactive);
   }
 
   async getBrandById(id: string) {
@@ -21,6 +21,7 @@ export class BrandService {
     slug: string;
     logo?: string;
     description?: string;
+    active?: boolean;
   }) {
     if (!data.name || data.name.trim().length === 0) {
       throw new Error("El nombre de la marca es requerido");
@@ -40,7 +41,7 @@ export class BrandService {
       slug: data.slug.trim().toLowerCase(),
       logo: data.logo,
       description: data.description,
-      active: true,
+      active: data.active ?? true,
     });
 
     return result[0] || null;
@@ -53,6 +54,7 @@ export class BrandService {
       slug: string;
       logo: string;
       description: string;
+      active: boolean;
     }>
   ) {
     const existing = await this.getBrandById(id);
@@ -72,6 +74,7 @@ export class BrandService {
     if (data.slug) updateData.slug = data.slug.trim().toLowerCase();
     if (data.logo !== undefined) updateData.logo = data.logo;
     if (data.description !== undefined) updateData.description = data.description;
+    if (data.active !== undefined) updateData.active = data.active;
 
     const result = await brandRepository.update(id, updateData);
     return result[0] || null;

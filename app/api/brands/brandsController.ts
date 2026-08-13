@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/src/lib/auth";
 import { requireAuth } from "@/src/lib/authGuard";
 import { brandService } from "@/src/services/brandsService";
 
@@ -27,8 +28,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // GET /api/brands
-    const brands = await brandService.getAllBrands();
+    // GET /api/brands (?includeInactive=true solo tiene efecto si hay sesión)
+    let includeInactive = false;
+    if (url.searchParams.get("includeInactive") === "true") {
+      const session = await auth();
+      includeInactive = !!session?.user;
+    }
+
+    const brands = await brandService.getAllBrands(includeInactive);
     return NextResponse.json({
       success: true,
       data: brands,
@@ -58,6 +65,7 @@ export async function POST(request: NextRequest) {
       slug: body.slug,
       logo: body.logo,
       description: body.description,
+      active: body.active,
     });
 
     return NextResponse.json(
