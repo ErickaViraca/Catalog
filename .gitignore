@@ -46,3 +46,6 @@ next-env.d.ts
 # database
 *.db
 prisma/migrations/
+
+# archivos de importación local (Excel con datos de negocio, no se versionan)
+/data/import/
