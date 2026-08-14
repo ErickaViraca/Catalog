@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
-import { Checkbox } from "@/components/form";
+import { FilterCheckbox } from "@/components/products/FilterCheckbox";
 import { normalizeApiProduct } from "@/src/lib/normalizeProduct";
 
 const PAGE_SIZE = 12;
@@ -119,7 +119,7 @@ export default function ShopPage() {
         <div className="lg:sticky lg:top-24 lg:self-start">
           {/* Todos los productos: atajo para limpiar categorías y marcas de una */}
           <div className="mb-6">
-            <Checkbox
+            <FilterCheckbox
               label="Todos los productos"
               checked={selectedCategoryIds.length === 0 && selectedBrandIds.length === 0}
               onChange={() => {
@@ -135,7 +135,7 @@ export default function ShopPage() {
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
             <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
               {categories.map((cat) => (
-                <Checkbox
+                <FilterCheckbox
                   key={cat.id}
                   label={cat.name}
                   checked={selectedCategoryIds.includes(cat.id)}
@@ -150,7 +150,7 @@ export default function ShopPage() {
             <h3 className="font-semibold text-sm mb-2">Marcas</h3>
             <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
               {brands.map((brand) => (
-                <Checkbox
+                <FilterCheckbox
                   key={brand.id}
                   label={brand.name}
                   checked={selectedBrandIds.includes(brand.id)}
