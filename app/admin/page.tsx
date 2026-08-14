@@ -9,6 +9,7 @@ import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AlertModal } from "@/components/common/AlertModal";
+import { Modal } from "@/components/common/Modal";
 import { PencilIcon, TrashIcon } from "@/components/common/icons";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
@@ -73,6 +74,17 @@ export default function AdminPage() {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
   };
 
+  // Form del modal de edición de marca — separado de newBrand (que es
+  // solo para crear), así ambos formularios no se pisan entre sí.
+  const [editBrandForm, setEditBrandForm] = useState({
+    name: "",
+    slug: "",
+    logo: "",
+    description: "",
+    active: true,
+  });
+  const [editBrandSubmitAttempted, setEditBrandSubmitAttempted] = useState(false);
+
   const [newCategory, setNewCategory] = useState({
     name: "",
     slug: "",
@@ -84,6 +96,16 @@ export default function AdminPage() {
   const categoryValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
   };
+
+  // Form del modal de edición de categoría — separado de newCategory
+  const [editCategoryForm, setEditCategoryForm] = useState({
+    name: "",
+    slug: "",
+    image: "",
+    description: "",
+    active: true,
+  });
+  const [editCategorySubmitAttempted, setEditCategorySubmitAttempted] = useState(false);
 
   // Ordenamiento de tablas: null = orden por defecto (el que devuelve la API)
   const [brandSort, setBrandSort] = useState<SortState | null>(null);
@@ -405,6 +427,23 @@ export default function AdminPage() {
     brandId: selected("una marca"),
   };
 
+  // Form del modal de edición de producto — separado de newProduct
+  const [editProductForm, setEditProductForm] = useState({
+    name: "",
+    code: "",
+    slug: "",
+    description: "",
+    price: 0,
+    stock: 0,
+    sku: "",
+    categoryId: "",
+    brandId: "",
+    featured: false,
+    imageUrl: "",
+  });
+  const [editProductSubmitAttempted, setEditProductSubmitAttempted] = useState(false);
+  const [editProductImageUploading, setEditProductImageUploading] = useState(false);
+
   const handleAddBrand = async () => {
     setBrandSubmitAttempted(true);
     const errors = validateForm(newBrand, brandValidators);
@@ -416,37 +455,18 @@ export default function AdminPage() {
     try {
       setLoading(true);
 
-      if (editingBrand) {
-        // Actualizar brand existente
-        const response = await fetch("/api/brands", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingBrand.id, ...newBrand }),
-        });
+      const response = await fetch("/api/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBrand),
+      });
 
-        const data = await response.json();
-        if (data.success) {
-          await fetchBrands();
-          setEditingBrand(null);
-          showSuccess("¡Marca actualizada exitosamente!");
-        } else {
-          showError(data.error || "Error al actualizar la marca");
-        }
+      const data = await response.json();
+      if (data.success) {
+        await fetchBrands();
+        showSuccess("¡Marca creada exitosamente!");
       } else {
-        // Crear nuevo brand
-        const response = await fetch("/api/brands", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newBrand),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          await fetchBrands();
-          showSuccess("¡Marca creada exitosamente!");
-        } else {
-          showError(data.error || "Error al crear la marca");
-        }
+        showError(data.error || "Error al crear la marca");
       }
 
       setNewBrand({ name: "", slug: "", logo: "", description: "", active: true });
@@ -462,10 +482,46 @@ export default function AdminPage() {
 
   const handleEditBrand = (brand: any) => {
     setEditingBrand(brand);
-    setNewBrand(brand);
-    setBrandSlugTouched(true);
-    setBrandSubmitAttempted(false);
-    setActiveTab("brands");
+    setEditBrandForm({
+      name: brand.name,
+      slug: brand.slug,
+      logo: brand.logo || "",
+      description: brand.description || "",
+      active: brand.active,
+    });
+    setEditBrandSubmitAttempted(false);
+  };
+
+  const handleSaveEditBrand = async () => {
+    setEditBrandSubmitAttempted(true);
+    const errors = validateForm(editBrandForm, brandValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/brands", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingBrand.id, ...editBrandForm }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchBrands();
+        setEditingBrand(null);
+        showSuccess("¡Marca actualizada exitosamente!");
+      } else {
+        showError(data.error || "Error al actualizar la marca");
+      }
+    } catch (err) {
+      showError("Error al guardar la marca");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteBrand = async (id: string) => {
@@ -503,37 +559,18 @@ export default function AdminPage() {
     try {
       setCategoriesLoading(true);
 
-      if (editingCategory) {
-        // Actualizar category existente
-        const response = await fetch("/api/categories", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingCategory.id, ...newCategory }),
-        });
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCategory),
+      });
 
-        const data = await response.json();
-        if (data.success) {
-          await fetchCategories();
-          setEditingCategory(null);
-          showSuccess("¡Categoría actualizada exitosamente!");
-        } else {
-          showError(data.error || "Error al actualizar la categoría");
-        }
+      const data = await response.json();
+      if (data.success) {
+        await fetchCategories();
+        showSuccess("¡Categoría creada exitosamente!");
       } else {
-        // Crear nueva category
-        const response = await fetch("/api/categories", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newCategory),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          await fetchCategories();
-          showSuccess("¡Categoría creada exitosamente!");
-        } else {
-          showError(data.error || "Error al crear la categoría");
-        }
+        showError(data.error || "Error al crear la categoría");
       }
 
       setNewCategory({ name: "", slug: "", image: "", description: "", active: true });
@@ -549,16 +586,46 @@ export default function AdminPage() {
 
   const handleEditCategory = (category: any) => {
     setEditingCategory(category);
-    setNewCategory({
+    setEditCategoryForm({
       name: category.name,
       slug: category.slug,
       image: category.image || "",
       description: category.description || "",
       active: category.active,
     });
-    setCategorySlugTouched(true);
-    setCategorySubmitAttempted(false);
-    setActiveTab("categories");
+    setEditCategorySubmitAttempted(false);
+  };
+
+  const handleSaveEditCategory = async () => {
+    setEditCategorySubmitAttempted(true);
+    const errors = validateForm(editCategoryForm, categoryValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
+
+    try {
+      setCategoriesLoading(true);
+      const response = await fetch("/api/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingCategory.id, ...editCategoryForm }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchCategories();
+        setEditingCategory(null);
+        showSuccess("¡Categoría actualizada exitosamente!");
+      } else {
+        showError(data.error || "Error al actualizar la categoría");
+      }
+    } catch (err) {
+      showError("Error al guardar la categoría");
+      console.error(err);
+    } finally {
+      setCategoriesLoading(false);
+    }
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -596,37 +663,18 @@ export default function AdminPage() {
     try {
       setProductsLoading(true);
 
-      if (editingProduct) {
-        // Actualizar product existente
-        const response = await fetch("/api/products", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingProduct.id, ...newProduct }),
-        });
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProduct),
+      });
 
-        const data = await response.json();
-        if (data.success) {
-          await fetchProducts();
-          setEditingProduct(null);
-          showSuccess("¡Producto actualizado exitosamente!");
-        } else {
-          showError(data.error || "Error al actualizar el producto");
-        }
+      const data = await response.json();
+      if (data.success) {
+        await fetchProducts();
+        showSuccess("¡Producto agregado exitosamente!");
       } else {
-        // Crear nuevo product
-        const response = await fetch("/api/products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newProduct),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          await fetchProducts();
-          showSuccess("¡Producto agregado exitosamente!");
-        } else {
-          showError(data.error || "Error al crear el producto");
-        }
+        showError(data.error || "Error al crear el producto");
       }
 
       setNewProduct({
@@ -655,7 +703,7 @@ export default function AdminPage() {
 
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
-    setNewProduct({
+    setEditProductForm({
       name: product.name,
       code: product.code,
       slug: product.slug,
@@ -668,9 +716,39 @@ export default function AdminPage() {
       featured: product.featured,
       imageUrl: product.imageUrl || "",
     });
-    setProductSlugTouched(true);
-    setProductSubmitAttempted(false);
-    setActiveTab("products");
+    setEditProductSubmitAttempted(false);
+  };
+
+  const handleSaveEditProduct = async () => {
+    setEditProductSubmitAttempted(true);
+    const errors = validateForm(editProductForm, productValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
+
+    try {
+      setProductsLoading(true);
+      const response = await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingProduct.id, ...editProductForm }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchProducts();
+        setEditingProduct(null);
+        showSuccess("¡Producto actualizado exitosamente!");
+      } else {
+        showError(data.error || "Error al actualizar el producto");
+      }
+    } catch (err) {
+      showError("Error al guardar el producto");
+      console.error(err);
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -724,6 +802,37 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setProductImageUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleEditProductImageUpload = async (
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setEditProductImageUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setEditProductForm((prev) => ({ ...prev, imageUrl: data.data.url }));
+      } else {
+        showError(data.error || "Error al subir la imagen");
+      }
+    } catch (err) {
+      showError("Error al subir la imagen");
+      console.error(err);
+    } finally {
+      setEditProductImageUploading(false);
       e.target.value = "";
     }
   };
@@ -783,9 +892,7 @@ export default function AdminPage() {
       {activeTab === "brands" && (
         <div>
           <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
-            <h2 className="text-2xl font-bold mb-6">
-              {editingBrand ? "Editar Marca" : "Agregar Nueva Marca"}
-            </h2>
+            <h2 className="text-2xl font-bold mb-6">Agregar Nueva Marca</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 label="Nombre de la Marca"
@@ -823,22 +930,8 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAddBrand} disabled={loading}>
-                {loading ? "Guardando..." : editingBrand ? "Actualizar Marca" : "Agregar Marca"}
+                {loading ? "Guardando..." : "Agregar Marca"}
               </Button>
-              {editingBrand && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingBrand(null);
-                    setNewBrand({ name: "", slug: "", logo: "", description: "", active: true });
-                    setBrandSlugTouched(false);
-                    setBrandSubmitAttempted(false);
-                  }}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-              )}
             </div>
           </div>
 
@@ -933,9 +1026,7 @@ export default function AdminPage() {
       {activeTab === "products" && (
         <div>
           <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
-            <h2 className="text-2xl font-bold mb-6">
-              {editingProduct ? "Editar Producto" : "Agregar Nuevo Producto"}
-            </h2>
+            <h2 className="text-2xl font-bold mb-6">Agregar Nuevo Producto</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 label="Nombre del Producto"
@@ -1092,39 +1183,8 @@ export default function AdminPage() {
                 onClick={handleAddProduct}
                 disabled={productsLoading || productImageUploading}
               >
-                {productsLoading
-                  ? "Guardando..."
-                  : editingProduct
-                    ? "Actualizar Producto"
-                    : "Agregar Producto"}
+                {productsLoading ? "Guardando..." : "Agregar Producto"}
               </Button>
-              {editingProduct && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingProduct(null);
-                    setNewProduct({
-                      name: "",
-                      code: "",
-                      slug: "",
-                      description: "",
-                      price: 0,
-                      stock: 0,
-                      sku: "",
-                      categoryId: categories[0]?.id || "",
-                      brandId: brands[0]?.id || "",
-                      featured: false,
-                      imageUrl: "",
-                    });
-                    setProductSlugTouched(false);
-                    setProductSubmitAttempted(false);
-                    setProductSlugSuffix(randomSlugSuffix());
-                  }}
-                  disabled={productsLoading}
-                >
-                  Cancelar
-                </Button>
-              )}
             </div>
           </div>
 
@@ -1229,9 +1289,7 @@ export default function AdminPage() {
       {activeTab === "categories" && (
         <div>
           <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} mb-8`}>
-            <h2 className="text-2xl font-bold mb-6">
-              {editingCategory ? "Editar Categoría" : "Agregar Nueva Categoría"}
-            </h2>
+            <h2 className="text-2xl font-bold mb-6">Agregar Nueva Categoría</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 label="Nombre de la Categoría"
@@ -1269,26 +1327,8 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAddCategory} disabled={categoriesLoading}>
-                {categoriesLoading
-                  ? "Guardando..."
-                  : editingCategory
-                    ? "Actualizar Categoría"
-                    : "Agregar Categoría"}
+                {categoriesLoading ? "Guardando..." : "Agregar Categoría"}
               </Button>
-              {editingCategory && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingCategory(null);
-                    setNewCategory({ name: "", slug: "", image: "", description: "", active: true });
-                    setCategorySlugTouched(false);
-                    setCategorySubmitAttempted(false);
-                  }}
-                  disabled={categoriesLoading}
-                >
-                  Cancelar
-                </Button>
-              )}
             </div>
           </div>
 
@@ -1522,6 +1562,227 @@ export default function AdminPage() {
         message={blockedDeleteMessage || ""}
         onClose={() => setBlockedDeleteMessage(null)}
       />
+
+      <Modal
+        open={!!editingBrand}
+        title="Editar Marca"
+        onCancel={() => setEditingBrand(null)}
+        onSave={handleSaveEditBrand}
+        saving={loading}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <Input
+            label="Nombre de la Marca"
+            required
+            value={editBrandForm.name}
+            validate={brandValidators.name}
+            forceTouched={editBrandSubmitAttempted}
+            onChange={(name) => setEditBrandForm((prev) => ({ ...prev, name }))}
+          />
+          <Input
+            label="URL del Logo"
+            value={editBrandForm.logo}
+            onChange={(logo) => setEditBrandForm((prev) => ({ ...prev, logo }))}
+          />
+          <Textarea
+            label="Descripción"
+            value={editBrandForm.description}
+            onChange={(description) =>
+              setEditBrandForm((prev) => ({ ...prev, description }))
+            }
+          />
+        </div>
+        <Switch
+          label="Marca activa"
+          checked={editBrandForm.active}
+          onChange={(active) => setEditBrandForm((prev) => ({ ...prev, active }))}
+        />
+      </Modal>
+
+      <Modal
+        open={!!editingCategory}
+        title="Editar Categoría"
+        onCancel={() => setEditingCategory(null)}
+        onSave={handleSaveEditCategory}
+        saving={categoriesLoading}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <Input
+            label="Nombre de la Categoría"
+            required
+            value={editCategoryForm.name}
+            validate={categoryValidators.name}
+            forceTouched={editCategorySubmitAttempted}
+            onChange={(name) => setEditCategoryForm((prev) => ({ ...prev, name }))}
+          />
+          <Input
+            label="URL de la Imagen"
+            value={editCategoryForm.image}
+            onChange={(image) => setEditCategoryForm((prev) => ({ ...prev, image }))}
+          />
+          <Textarea
+            label="Descripción"
+            value={editCategoryForm.description}
+            onChange={(description) =>
+              setEditCategoryForm((prev) => ({ ...prev, description }))
+            }
+          />
+        </div>
+        <Switch
+          label="Categoría activa"
+          checked={editCategoryForm.active}
+          onChange={(active) => setEditCategoryForm((prev) => ({ ...prev, active }))}
+        />
+      </Modal>
+
+      <Modal
+        open={!!editingProduct}
+        title="Editar Producto"
+        onCancel={() => setEditingProduct(null)}
+        onSave={handleSaveEditProduct}
+        saving={productsLoading}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <Input
+            label="Nombre del Producto"
+            required
+            value={editProductForm.name}
+            validate={productValidators.name}
+            forceTouched={editProductSubmitAttempted}
+            onChange={(name) => setEditProductForm((prev) => ({ ...prev, name }))}
+          />
+          <Input
+            label="Código de Fabricante"
+            required
+            value={editProductForm.code}
+            validate={productValidators.code}
+            forceTouched={editProductSubmitAttempted}
+            maxLength={50}
+            helperText="Código del fabricante, máx 50 caracteres"
+            onChange={(code) => setEditProductForm((prev) => ({ ...prev, code }))}
+          />
+          <Input
+            label="Código de Inventario"
+            required
+            value={editProductForm.sku}
+            validate={productValidators.sku}
+            forceTouched={editProductSubmitAttempted}
+            maxLength={10}
+            helperText="Máximo 10 caracteres, único por producto"
+            onChange={(sku) => setEditProductForm((prev) => ({ ...prev, sku }))}
+          />
+          <Input
+            label="Precio"
+            required
+            type="number"
+            value={editProductForm.price}
+            validate={productValidators.price}
+            forceTouched={editProductSubmitAttempted}
+            helperText="En USD, ej: 89.99"
+            onChange={(value) =>
+              setEditProductForm((prev) => ({ ...prev, price: parseFloat(value) || 0 }))
+            }
+          />
+          <Input
+            label="Stock"
+            type="number"
+            value={editProductForm.stock}
+            validate={productValidators.stock}
+            forceTouched={editProductSubmitAttempted}
+            onChange={(value) =>
+              setEditProductForm((prev) => ({ ...prev, stock: parseInt(value) || 0 }))
+            }
+          />
+          <Select
+            label="Categoría"
+            required
+            value={editProductForm.categoryId}
+            validate={productValidators.categoryId}
+            forceTouched={editProductSubmitAttempted}
+            onChange={(categoryId) =>
+              setEditProductForm((prev) => ({ ...prev, categoryId }))
+            }
+          >
+            <option value="">Selecciona una categoría</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Marca"
+            required
+            value={editProductForm.brandId}
+            validate={productValidators.brandId}
+            forceTouched={editProductSubmitAttempted}
+            onChange={(brandId) => setEditProductForm((prev) => ({ ...prev, brandId }))}
+          >
+            <option value="">Selecciona una marca</option>
+            {brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>
+                {brand.name}
+              </option>
+            ))}
+          </Select>
+          <Checkbox
+            label="Producto destacado"
+            checked={editProductForm.featured}
+            onChange={(featured) => setEditProductForm((prev) => ({ ...prev, featured }))}
+          />
+        </div>
+
+        <div className="mb-4">
+          <Textarea
+            label="Descripción"
+            required
+            value={editProductForm.description}
+            validate={productValidators.description}
+            forceTouched={editProductSubmitAttempted}
+            onChange={(description) =>
+              setEditProductForm((prev) => ({ ...prev, description }))
+            }
+          />
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-sm mb-2 text-label">Imagen del Producto</h3>
+          <div className="flex items-center gap-4">
+            {editProductForm.imageUrl ? (
+              <img
+                src={editProductForm.imageUrl}
+                alt="Vista previa"
+                className="w-16 h-16 object-cover rounded-lg border border-border"
+              />
+            ) : (
+              <ImagePlaceholder size={64} />
+            )}
+            <div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={handleEditProductImageUpload}
+                disabled={editProductImageUploading}
+                className="text-sm"
+              />
+              {editProductImageUploading && (
+                <p className="text-sm text-muted mt-1">Subiendo imagen...</p>
+              )}
+              {editProductForm.imageUrl && !editProductImageUploading && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditProductForm((prev) => ({ ...prev, imageUrl: "" }))
+                  }
+                  className="text-sm text-danger hover:underline mt-1"
+                >
+                  Quitar imagen
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
