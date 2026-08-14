@@ -24,13 +24,14 @@ import {
   validateForm,
 } from "@/src/lib/validators";
 
-type Tab = "brands" | "products" | "categories" | "banners";
+type Tab = "brands" | "products" | "categories" | "banners" | "config";
 
 const TAB_LABELS: Record<Tab, string> = {
   brands: "Marcas",
   products: "Productos",
   categories: "Categorías",
   banners: "Banners",
+  config: "Configuración",
 };
 
 export default function AdminPage() {
@@ -166,11 +167,12 @@ export default function AdminPage() {
     product: { title: "Eliminar producto", noun: "el producto" },
   } as const;
 
-  // Cargar brands, categories y products del API
+  // Cargar brands, categories, products y company del API
   useEffect(() => {
     fetchBrands();
     fetchCategories();
     fetchProducts();
+    fetchCompany();
   }, []);
 
   const fetchBrands = async () => {
@@ -227,6 +229,131 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setProductsLoading(false);
+    }
+  };
+
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companySubmitAttempted, setCompanySubmitAttempted] = useState(false);
+  const [companyForm, setCompanyForm] = useState({
+    name: "",
+    dollarPriceBs: "",
+    phones: [""],
+    addresses: [""],
+  });
+
+  const companyValidators = {
+    name: combine(required("El nombre"), minLength(2, "El nombre")),
+    dollarPriceBs: (value: unknown) => {
+      const num = Number(value);
+      if (!value || Number.isNaN(num) || num <= 0) {
+        return "El valor del dólar debe ser mayor a 0";
+      }
+      return null;
+    },
+  };
+
+  const fetchCompany = async () => {
+    try {
+      setCompanyLoading(true);
+      const response = await fetch("/api/company");
+      const data = await response.json();
+
+      if (data.success) {
+        setCompanyForm({
+          name: data.data.name,
+          dollarPriceBs: data.data.dollarPriceBs,
+          phones: data.data.phones.length ? data.data.phones : [""],
+          addresses: data.data.addresses.length ? data.data.addresses : [""],
+        });
+      } else {
+        showError(data.error || "Error al obtener la configuración");
+      }
+    } catch (err) {
+      showError("Error al conectar con el servidor");
+      console.error(err);
+    } finally {
+      setCompanyLoading(false);
+    }
+  };
+
+  const updatePhoneAt = (index: number, value: string) => {
+    setCompanyForm((prev) => {
+      const phones = [...prev.phones];
+      phones[index] = value;
+      return { ...prev, phones };
+    });
+  };
+  const addPhone = () =>
+    setCompanyForm((prev) => ({ ...prev, phones: [...prev.phones, ""] }));
+  const removePhone = (index: number) =>
+    setCompanyForm((prev) => ({
+      ...prev,
+      phones: prev.phones.filter((_, i) => i !== index),
+    }));
+
+  const updateAddressAt = (index: number, value: string) => {
+    setCompanyForm((prev) => {
+      const addresses = [...prev.addresses];
+      addresses[index] = value;
+      return { ...prev, addresses };
+    });
+  };
+  const addAddress = () =>
+    setCompanyForm((prev) => ({ ...prev, addresses: [...prev.addresses, ""] }));
+  const removeAddress = (index: number) =>
+    setCompanyForm((prev) => ({
+      ...prev,
+      addresses: prev.addresses.filter((_, i) => i !== index),
+    }));
+
+  const handleUpdateCompany = async () => {
+    setCompanySubmitAttempted(true);
+    const errors = validateForm(companyForm, companyValidators);
+    if (Object.keys(errors).length > 0) {
+      showError("Revisa los campos marcados en rojo");
+      return;
+    }
+
+    const phones = companyForm.phones.map((phone) => phone.trim()).filter(Boolean);
+    const addresses = companyForm.addresses
+      .map((address) => address.trim())
+      .filter(Boolean);
+
+    if (phones.length === 0) {
+      showError("Debe haber al menos un teléfono de contacto");
+      return;
+    }
+    if (addresses.length === 0) {
+      showError("Debe haber al menos una dirección");
+      return;
+    }
+
+    try {
+      setCompanyLoading(true);
+      const response = await fetch("/api/company", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: companyForm.name,
+          dollarPriceBs: companyForm.dollarPriceBs,
+          phones,
+          addresses,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchCompany();
+        showSuccess("¡Configuración actualizada exitosamente!");
+      } else {
+        showError(data.error || "Error al actualizar la configuración");
+      }
+    } catch (err) {
+      showError("Error al guardar la configuración");
+      console.error(err);
+    } finally {
+      setCompanyLoading(false);
+      setCompanySubmitAttempted(false);
     }
   };
 
@@ -636,7 +763,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-4 mb-8 border-b">
-        {(["brands", "products", "categories", "banners"] as Tab[]).map((tab) => (
+        {(["brands", "products", "categories", "banners", "config"] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -1260,6 +1387,112 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Configuración Tab */}
+      {activeTab === "config" && (
+        <div className={`bg-white rounded-lg shadow ${FORM_STYLES.cardPadding} max-w-3xl`}>
+          <h2 className="text-2xl font-bold mb-6">Configuración</h2>
+          {companyLoading && !companyForm.name ? (
+            <div className="px-6 py-8 text-center text-gray-500">
+              Cargando configuración...
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <Input
+                  label="Nombre de la Empresa"
+                  required
+                  value={companyForm.name}
+                  validate={companyValidators.name}
+                  forceTouched={companySubmitAttempted}
+                  helperText="Se muestra en el header y el footer del sitio"
+                  onChange={(name) => setCompanyForm((prev) => ({ ...prev, name }))}
+                />
+                <Input
+                  label="Valor del Dólar (Bs)"
+                  required
+                  type="number"
+                  value={companyForm.dollarPriceBs}
+                  validate={companyValidators.dollarPriceBs}
+                  forceTouched={companySubmitAttempted}
+                  helperText="Cotización para conversión USD → Bs"
+                  onChange={(value) =>
+                    setCompanyForm((prev) => ({ ...prev, dollarPriceBs: value }))
+                  }
+                />
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold text-sm mb-2 text-label">
+                  Teléfonos de Contacto
+                </h3>
+                <div className="space-y-2">
+                  {companyForm.phones.map((phone, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        id={`phone-${index}`}
+                        value={phone}
+                        onChange={(value) => updatePhoneAt(index, value)}
+                      />
+                      {companyForm.phones.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePhone(index)}
+                          className="text-sm text-danger hover:underline px-2 shrink-0"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addPhone}
+                  className="text-sm text-primary hover:underline mt-2"
+                >
+                  + Agregar teléfono
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold text-sm mb-2 text-label">Direcciones</h3>
+                <div className="space-y-2">
+                  {companyForm.addresses.map((address, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        id={`address-${index}`}
+                        value={address}
+                        onChange={(value) => updateAddressAt(index, value)}
+                      />
+                      {companyForm.addresses.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeAddress(index)}
+                          className="text-sm text-danger hover:underline px-2 shrink-0"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addAddress}
+                  className="text-sm text-primary hover:underline mt-2"
+                >
+                  + Agregar dirección
+                </button>
+              </div>
+
+              <Button onClick={handleUpdateCompany} disabled={companyLoading}>
+                {companyLoading ? "Guardando..." : "Guardar Configuración"}
+              </Button>
+            </>
+          )}
         </div>
       )}
 

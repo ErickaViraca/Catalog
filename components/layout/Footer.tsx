@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { COMPANY_NAME, COMPANY_DESCRIPTION, CONTACT_INFO, SOCIAL_LINKS } from "@/src/config/contact";
+import { COMPANY_DESCRIPTION, CONTACT_INFO, SOCIAL_LINKS, buildWhatsAppLink } from "@/src/config/contact";
+import { useCompany } from "@/src/hooks/useCompany";
 import {
   FacebookIcon,
   InstagramIcon,
@@ -10,12 +13,18 @@ import {
 } from "@/components/common/icons";
 
 export function Footer() {
+  const company = useCompany();
+  const companyName = company?.name ?? "MiTiendaXiaomi";
+  const addresses = company?.addresses ?? [];
+  const phones = company?.phones ?? [];
+  const whatsappLink = buildWhatsAppLink(phones[0] ?? "");
+
   return (
     <footer className="bg-gray-900 text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">{COMPANY_NAME}</h3>
+            <h3 className="font-bold text-lg mb-4">{companyName}</h3>
             <p className="text-gray-400 text-sm">{COMPANY_DESCRIPTION}</p>
             <div className="flex gap-3 mt-4">
               <a
@@ -28,7 +37,7 @@ export function Footer() {
                 <FacebookIcon size={18} />
               </a>
               <a
-                href={SOCIAL_LINKS.whatsapp}
+                href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
@@ -72,13 +81,13 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contacto</h4>
             <ul className="space-y-3 text-gray-400 text-sm">
-              {CONTACT_INFO.addresses.map((address, index) => (
+              {addresses.map((address, index) => (
                 <li key={`address-${index}`} className="flex items-start gap-2">
                   <MapPinIcon size={16} className="mt-0.5 shrink-0 text-gray-500" />
                   <span>{address}</span>
                 </li>
               ))}
-              {CONTACT_INFO.phones.map((phone, index) => (
+              {phones.map((phone, index) => (
                 <li key={`phone-${index}`} className="flex items-center gap-2">
                   <PhoneIcon size={16} className="shrink-0 text-gray-500" />
                   <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-white">
@@ -98,7 +107,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            &copy; 2026 {COMPANY_NAME}. Todos los derechos reservados. | Hecho con Next.js
+            &copy; 2026 {companyName}. Todos los derechos reservados. | Hecho con Next.js
           </p>
         </div>
       </div>

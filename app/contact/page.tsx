@@ -1,8 +1,16 @@
-import { CONTACT_INFO, SOCIAL_LINKS } from "@/src/config/contact";
+"use client";
+
+import { CONTACT_INFO, buildWhatsAppLink } from "@/src/config/contact";
+import { useCompany } from "@/src/hooks/useCompany";
 import { MapPinIcon, PhoneIcon, MailIcon, WhatsAppIcon } from "@/components/common/icons";
 import { Button } from "@/components/common/Button";
 
 export default function ContactPage() {
+  const company = useCompany();
+  const addresses = company?.addresses ?? [];
+  const phones = company?.phones ?? [];
+  const whatsappLink = buildWhatsAppLink(phones[0] ?? "");
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-16">
       <div className="text-center mb-12">
@@ -18,7 +26,7 @@ export default function ContactPage() {
           <MapPinIcon size={24} className="text-gray-400 mb-3" />
           <h3 className="font-semibold mb-2">Nuestras tiendas</h3>
           <ul className="space-y-1 text-gray-600 text-sm">
-            {CONTACT_INFO.addresses.map((address, index) => (
+            {addresses.map((address, index) => (
               <li key={index}>{address}</li>
             ))}
           </ul>
@@ -28,7 +36,7 @@ export default function ContactPage() {
           <PhoneIcon size={24} className="text-gray-400 mb-3" />
           <h3 className="font-semibold mb-2">Teléfonos</h3>
           <ul className="space-y-1 text-gray-600 text-sm">
-            {CONTACT_INFO.phones.map((phone, index) => (
+            {phones.map((phone, index) => (
               <li key={index}>
                 <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-primary">
                   {phone}
@@ -55,7 +63,7 @@ export default function ContactPage() {
         <p className="text-gray-400 mb-6">
           Escríbenos directo y te respondemos lo antes posible.
         </p>
-        <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+        <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
           <Button size="lg">Escribir por WhatsApp</Button>
         </a>
       </div>

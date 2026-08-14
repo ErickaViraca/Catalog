@@ -40,5 +40,6 @@ export const config = {
     "/api/categories/:path*",
     "/api/products/:path*",
     "/api/upload/:path*",
+    "/api/company/:path*",
   ],
 };

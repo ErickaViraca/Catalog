@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { XiaomiLogo } from "@/components/common/XiaomiLogo";
+import { useCompany } from "@/src/hooks/useCompany";
 
 export function Navbar() {
   const pathname = usePathname();
+  const company = useCompany();
 
   const isActive = (path: string) => pathname === path;
 
@@ -15,7 +17,9 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <XiaomiLogo size={28} />
-            <span className="font-bold text-xl hidden sm:inline">MiTiendaXiaomi</span>
+            <span className="font-bold text-xl hidden sm:inline">
+              {company?.name ?? "MiTiendaXiaomi"}
+            </span>
           </Link>
 
           <div className="flex items-center gap-6">

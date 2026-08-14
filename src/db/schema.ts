@@ -8,6 +8,7 @@ import {
   uuid,
   uniqueIndex,
   foreignKey,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // BRANDS TABLE
@@ -104,6 +105,20 @@ export const productImages = pgTable(
   })
 );
 
+// COMPANIES TABLE
+// Fila única con los datos editables desde /admin (sección Configuración):
+// nombre, cotización del dólar en bolivianos, teléfonos y direcciones.
+// phones/addresses son listas cortas mantenidas a mano por el admin, no
+// datos relacionales, así que van como jsonb en vez de tablas aparte.
+export const companies = pgTable("companies", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  dollarPriceBs: decimal("dollar_price_bs", { precision: 10, scale: 2 }).notNull(),
+  phones: jsonb("phones").$type<string[]>().notNull().default([]),
+  addresses: jsonb("addresses").$type<string[]>().notNull().default([]),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // EXPORT TYPES
 export type Brand = typeof brands.$inferSelect;
 export type NewBrand = typeof brands.$inferInsert;
@@ -116,3 +131,6 @@ export type NewProduct = typeof products.$inferInsert;
 
 export type ProductImage = typeof productImages.$inferSelect;
 export type NewProductImage = typeof productImages.$inferInsert;
+
+export type Company = typeof companies.$inferSelect;
+export type NewCompany = typeof companies.$inferInsert;

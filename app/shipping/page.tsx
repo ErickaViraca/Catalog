@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SOCIAL_LINKS } from "@/src/config/contact";
+import { buildWhatsAppLink } from "@/src/config/contact";
+import { useCompany } from "@/src/hooks/useCompany";
 import { Button } from "@/components/common/Button";
 
 const SHIPPING_ZONES = [
@@ -18,14 +19,13 @@ const SHIPPING_ZONES = [
 ];
 
 export default function ShippingPage() {
+  const company = useCompany();
   const [orderNumber, setOrderNumber] = useState("");
 
   const trackingMessage = orderNumber.trim()
     ? `Hola, quiero rastrear mi pedido #${orderNumber.trim()}`
     : "Hola, quiero rastrear mi pedido";
-  const whatsappTrackingUrl = `${SOCIAL_LINKS.whatsapp}?text=${encodeURIComponent(
-    trackingMessage
-  )}`;
+  const whatsappTrackingUrl = buildWhatsAppLink(company?.phones[0] ?? "", trackingMessage);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-16">
