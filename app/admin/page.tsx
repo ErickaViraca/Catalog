@@ -9,6 +9,7 @@ import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AlertModal } from "@/components/common/AlertModal";
+import { PencilIcon, TrashIcon } from "@/components/common/icons";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 import { sortRows, SortDirection, SortState } from "@/src/lib/sortRows";
@@ -894,22 +895,24 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
+                            type="button"
                             onClick={() => handleEditBrand(brand)}
                             disabled={loading}
+                            aria-label="Editar marca"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            <PencilIcon size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => requestDeleteBrand(brand)}
                             disabled={loading || deleteChecking}
+                            aria-label="Eliminar marca"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Eliminar
-                          </Button>
+                            <TrashIcon size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1188,22 +1191,24 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
+                            type="button"
                             onClick={() => handleEditProduct(product)}
                             disabled={productsLoading}
+                            aria-label="Editar producto"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            <PencilIcon size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => requestDeleteProduct(product)}
                             disabled={productsLoading}
+                            aria-label="Eliminar producto"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Eliminar
-                          </Button>
+                            <TrashIcon size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1340,22 +1345,24 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
+                            type="button"
                             onClick={() => handleEditCategory(cat)}
                             disabled={categoriesLoading}
+                            aria-label="Editar categoría"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Editar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            <PencilIcon size={16} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => requestDeleteCategory(cat)}
                             disabled={categoriesLoading || deleteChecking}
+                            aria-label="Eliminar categoría"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Eliminar
-                          </Button>
+                            <TrashIcon size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
