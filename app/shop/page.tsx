@@ -14,6 +14,7 @@ export default function ShopPage() {
   const [brands, setBrands] = useState<any[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price-asc" | "price-desc">(
     "name"
@@ -45,6 +46,15 @@ export default function ShopPage() {
 
     fetchFilters();
   }, []);
+
+  // Debounce de la búsqueda: espera a que el usuario deje de escribir
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -107,21 +117,6 @@ export default function ShopPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6">
         {/* Sidebar */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          {/* Search */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Buscar</h3>
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
           {/* Categories Filter */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
@@ -172,6 +167,17 @@ export default function ShopPage() {
 
         {/* Products Grid */}
         <div>
+          {/* Buscador, arriba de los productos */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Buscar por producto o marca..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full px-4 py-3 text-sm border border-border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+            />
+          </div>
+
           <div ref={productsTopRef} className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">
               {totalProducts > 0
@@ -189,6 +195,7 @@ export default function ShopPage() {
                 onClick={() => {
                   setSelectedCategoryIds([]);
                   setSelectedBrandIds([]);
+                  setSearchInput("");
                   setSearchTerm("");
                   setPage(1);
                 }}
