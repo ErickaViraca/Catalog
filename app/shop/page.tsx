@@ -117,10 +117,10 @@ export default function ShopPage() {
             />
           </div>
 
-          {/* Categories Filter */}
+          {/* Categories Filter: caja con scroll vertical propio */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
-            <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
               {mockCategories.map((cat) => (
                 <FilterCheckbox
                   key={cat.id}
@@ -132,10 +132,10 @@ export default function ShopPage() {
             </div>
           </div>
 
-          {/* Brands Filter */}
+          {/* Brands Filter: caja con su propio scroll vertical, independiente del de Categorías */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Marcas</h3>
-            <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
               {mockBrands.map((brand) => (
                 <FilterCheckbox
                   key={brand.id}

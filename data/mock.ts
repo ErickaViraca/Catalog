@@ -25,14 +25,30 @@ export const mockCategories = [
     createdAt: now,
     updatedAt: now,
   },
+  // Categorías extra sin productos propios, solo para que la lista de
+  // filtros tenga más de las 3-4 que entran sin scroll y así se pueda
+  // ver el scroll vertical interno funcionando.
+  { id: "cat-4", name: "Screen Protectors", slug: "screen-protectors", createdAt: now, updatedAt: now },
+  { id: "cat-5", name: "Phone Cases", slug: "phone-cases", createdAt: now, updatedAt: now },
+  { id: "cat-6", name: "Car Accessories", slug: "car-accessories", createdAt: now, updatedAt: now },
+  { id: "cat-7", name: "Audio", slug: "audio", createdAt: now, updatedAt: now },
+  { id: "cat-8", name: "Smart Home", slug: "smart-home", createdAt: now, updatedAt: now },
+  { id: "cat-9", name: "Storage", slug: "storage", createdAt: now, updatedAt: now },
+  { id: "cat-10", name: "Tripods & Mounts", slug: "tripods-mounts", createdAt: now, updatedAt: now },
 ];
 
 // Marcas de prueba, solo para poder ver el filtro de Marcas del catálogo
-// funcionando mientras no hay datos reales cargados en la DB.
+// funcionando mientras no hay datos reales cargados en la DB. Las que no
+// tienen productos asignados son solo para probar el scroll vertical.
 export const mockBrands = [
   { id: "brand-1", name: "Ugreen", slug: "ugreen", createdAt: now, updatedAt: now },
   { id: "brand-2", name: "Anker", slug: "anker", createdAt: now, updatedAt: now },
   { id: "brand-3", name: "Baseus", slug: "baseus", createdAt: now, updatedAt: now },
+  { id: "brand-4", name: "Belkin", slug: "belkin", createdAt: now, updatedAt: now },
+  { id: "brand-5", name: "Spigen", slug: "spigen", createdAt: now, updatedAt: now },
+  { id: "brand-6", name: "JBL", slug: "jbl", createdAt: now, updatedAt: now },
+  { id: "brand-7", name: "Xiaomi", slug: "xiaomi", createdAt: now, updatedAt: now },
+  { id: "brand-8", name: "Aukey", slug: "aukey", createdAt: now, updatedAt: now },
 ];
 
 export const mockProducts = [
