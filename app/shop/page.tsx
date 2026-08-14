@@ -117,6 +117,19 @@ export default function ShopPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
         {/* Sidebar */}
         <div className="lg:sticky lg:top-24 lg:self-start">
+          {/* Todos los productos: atajo para limpiar categorías y marcas de una */}
+          <div className="mb-6">
+            <Checkbox
+              label="Todos los productos"
+              checked={selectedCategoryIds.length === 0 && selectedBrandIds.length === 0}
+              onChange={() => {
+                setSelectedCategoryIds([]);
+                setSelectedBrandIds([]);
+                setPage(1);
+              }}
+            />
+          </div>
+
           {/* Categories Filter */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
