@@ -180,18 +180,19 @@ export default function ShopPage() {
 
         {/* Products Grid */}
         <div>
-          {/* Buscador, arriba de los productos */}
-          <div className="mb-6">
+          {/* Buscador (mitad de ancho) + paginación compacta, lados opuestos */}
+          <div ref={productsTopRef} className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <input
               type="text"
               placeholder="Buscar por producto o marca..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-4 py-3 text-sm border border-border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+              className="w-full sm:w-1/2 px-4 py-3 text-sm border border-border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
             />
+            <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
           </div>
 
-          <div ref={productsTopRef} className="mb-6 flex justify-between items-center">
+          <div className="mb-6">
             <p className="text-gray-600">
               {totalProducts > 0
                 ? `Mostrando ${rangeStart}–${rangeEnd} de ${totalProducts} productos`
