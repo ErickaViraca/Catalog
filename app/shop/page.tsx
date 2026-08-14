@@ -174,7 +174,7 @@ export default function ShopPage() {
               placeholder="Buscar por producto o marca..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full sm:w-1/2 px-4 py-3 text-sm border border-border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+              className="w-full sm:w-1/2 px-4 py-3 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
           </div>
