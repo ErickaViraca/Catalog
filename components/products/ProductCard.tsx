@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
 import { Button } from "@/components/common/Button";
+import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 
 interface ProductCardProps {
   product: Product;
@@ -19,12 +20,18 @@ export function ProductCard({ product, hideAddToCart = false }: ProductCardProps
     <Link href={`/products/${product.slug}`}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
         <div className="relative w-full h-36 bg-gray-200">
-          <Image
-            src={mainImage}
-            alt={product.name}
-            fill
-            className="object-cover"
-          />
+          {mainImage ? (
+            <Image
+              src={mainImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ImagePlaceholder size={48} />
+            </div>
+          )}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <span className="text-white text-sm font-bold">Agotado</span>

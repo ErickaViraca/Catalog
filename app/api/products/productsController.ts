@@ -49,6 +49,33 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const categoryIdsParam = url.searchParams.get("categoryIds");
+    const brandIdsParam = url.searchParams.get("brandIds");
+    const search = url.searchParams.get("search");
+    const page = url.searchParams.get("page");
+    const sort = url.searchParams.get("sort");
+
+    // Catálogo público (/shop): filtros + paginación. Sin estos params,
+    // se mantiene el comportamiento anterior (todos los productos) —
+    // el admin panel sigue dependiendo de eso para listar sin recortar.
+    if (categoryIdsParam || brandIdsParam || search || page || sort) {
+      const result = await productService.getFilteredProducts({
+        categoryIds: categoryIdsParam ? categoryIdsParam.split(",").filter(Boolean) : undefined,
+        brandIds: brandIdsParam ? brandIdsParam.split(",").filter(Boolean) : undefined,
+        search: search || undefined,
+        sort: (sort as "name" | "price-asc" | "price-desc" | null) || undefined,
+        page: page ? Number(page) : undefined,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: result.items,
+        count: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+      });
+    }
+
     // GET /api/products
     const products = await productService.getAllProducts();
     return NextResponse.json({

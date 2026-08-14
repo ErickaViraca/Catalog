@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
-import { mockProducts } from "@/data/mock";
+import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
+import { normalizeApiProduct } from "@/src/lib/normalizeProduct";
+
+const PAGE_SIZE = 12;
 
 export default function ShopPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -12,6 +15,14 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState<"name" | "price-asc" | "price-desc">(
     "name"
   );
+  const [page, setPage] = useState(1);
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  const productsTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -29,35 +40,40 @@ export default function ShopPage() {
     fetchCategories();
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    let filtered = mockProducts;
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setProductsLoading(true);
+        const params = new URLSearchParams();
+        if (selectedCategory) params.set("categoryIds", selectedCategory);
+        if (searchTerm) params.set("search", searchTerm);
+        params.set("sort", sortBy);
+        params.set("page", String(page));
 
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.categoryId === selectedCategory);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "name":
-        default:
-          return a.name.localeCompare(b.name);
+        const response = await fetch(`/api/products?${params.toString()}`);
+        const data = await response.json();
+        if (data.success) {
+          setProducts(data.data);
+          setTotalProducts(data.count ?? data.data.length);
+          setTotalPages(data.totalPages ?? 1);
+        }
+      } catch (err) {
+        console.error("Error al obtener los productos", err);
+      } finally {
+        setProductsLoading(false);
       }
-    });
+    };
 
-    return filtered;
-  }, [selectedCategory, searchTerm, sortBy]);
+    fetchProducts();
+  }, [selectedCategory, searchTerm, sortBy, page]);
+
+  const goToPage = (newPage: number) => {
+    setPage(newPage);
+    productsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const rangeStart = totalProducts === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, totalProducts);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -73,7 +89,10 @@ export default function ShopPage() {
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -83,7 +102,10 @@ export default function ShopPage() {
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
             <div className="space-y-1">
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setPage(1);
+                }}
                 className={`block w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
                   selectedCategory === null
                     ? "bg-blue-600 text-white"
@@ -95,7 +117,10 @@ export default function ShopPage() {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setPage(1);
+                  }}
                   className={`block w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
                     selectedCategory === cat.id
                       ? "bg-blue-600 text-white"
@@ -113,9 +138,10 @@ export default function ShopPage() {
             <h3 className="font-semibold text-sm mb-2">Ordenar por</h3>
             <select
               value={sortBy}
-              onChange={(e) =>
-                setSortBy(e.target.value as "name" | "price-asc" | "price-desc")
-              }
+              onChange={(e) => {
+                setSortBy(e.target.value as "name" | "price-asc" | "price-desc");
+                setPage(1);
+              }}
               className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="name">Nombre (A-Z)</option>
@@ -127,19 +153,24 @@ export default function ShopPage() {
 
         {/* Products Grid */}
         <div>
-          <div className="mb-6 flex justify-between items-center">
+          <div ref={productsTopRef} className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">
-              Mostrando {filteredProducts.length} productos
+              {totalProducts > 0
+                ? `Mostrando ${rangeStart}–${rangeEnd} de ${totalProducts} productos`
+                : "Mostrando 0 productos"}
             </p>
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {productsLoading ? (
+            <div className="text-center py-12 text-gray-500">Cargando productos...</div>
+          ) : products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-xl text-gray-600">No se encontraron productos</p>
               <Button
                 onClick={() => {
                   setSelectedCategory(null);
                   setSearchTerm("");
+                  setPage(1);
                 }}
                 className="mt-4"
               >
@@ -147,11 +178,19 @@ export default function ShopPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} hideAddToCart />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={normalizeApiProduct(product)}
+                    hideAddToCart
+                  />
+                ))}
+              </div>
+
+              <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
+            </>
           )}
         </div>
       </div>

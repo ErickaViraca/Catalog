@@ -42,6 +42,54 @@ export class ProductService {
     return await productRepository.findByBrandId(brandId);
   }
 
+  // Catálogo público: filtro por categorías/marcas (multi-select),
+  // búsqueda por nombre de producto o de marca, y paginación.
+  async getFilteredProducts(options: {
+    categoryIds?: string[];
+    brandIds?: string[];
+    search?: string;
+    sort?: "name" | "price-asc" | "price-desc";
+    page?: number;
+    limit?: number;
+  }) {
+    const page = options.page && options.page > 0 ? options.page : 1;
+    const limit = options.limit && options.limit > 0 ? options.limit : 12;
+
+    let searchBrandIds: string[] | undefined;
+    if (options.search) {
+      const matchingBrands = await brandRepository.findByNameSearch(options.search);
+      searchBrandIds = matchingBrands.map((brand) => brand.id);
+    }
+
+    const { rows, total } = await productRepository.findFiltered({
+      categoryIds: options.categoryIds,
+      brandIds: options.brandIds,
+      search: options.search,
+      searchBrandIds,
+      sort: options.sort,
+      page,
+      limit,
+    });
+
+    const primaryImages = await productImageRepository.findPrimaryByProductIds(
+      rows.map((row) => row.id)
+    );
+    const imageByProductId = new Map(
+      primaryImages.map((image) => [image.productId, image.imageUrl])
+    );
+
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        imageUrl: imageByProductId.get(row.id) || null,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
+  }
+
   async createProduct(data: {
     name: string;
     code: string;
