@@ -133,7 +133,7 @@ export default function ShopPage() {
           {/* Categories Filter */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
-            <div className="space-y-2">
+            <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
               {categories.map((cat) => (
                 <Checkbox
                   key={cat.id}
@@ -148,7 +148,7 @@ export default function ShopPage() {
           {/* Brands Filter */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Marcas</h3>
-            <div className="space-y-2">
+            <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
               {brands.map((brand) => (
                 <Checkbox
                   key={brand.id}
