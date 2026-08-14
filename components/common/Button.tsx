@@ -5,7 +5,7 @@ interface ButtonProps {
   children: ReactNode;
   onClick?: () => void;
   className?: string;
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "danger";
   size?: ButtonSize;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
@@ -27,6 +27,7 @@ export function Button({
     primary: "bg-primary text-white hover:bg-primary-hover",
     secondary: "bg-secondary-bg text-secondary-text hover:bg-secondary-bg-hover",
     outline: "border-2 border-primary text-primary hover:bg-secondary-bg",
+    danger: "bg-danger text-white hover:bg-danger/90",
   };
 
   return (

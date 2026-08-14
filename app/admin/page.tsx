@@ -7,6 +7,7 @@ import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { useToast } from "@/components/common/ToastProvider";
 import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 import { sortRows, SortDirection, SortState } from "@/src/lib/sortRows";
@@ -99,6 +100,40 @@ export default function AdminPage() {
   const handleBrandSort = toggleSort(setBrandSort);
   const handleCategorySort = toggleSort(setCategorySort);
   const handleProductSort = toggleSort(setProductSort);
+
+  // Modal de confirmación de eliminación (reemplaza confirm() nativo)
+  const [confirmDelete, setConfirmDelete] = useState<{
+    type: "brand" | "category" | "product";
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const requestDeleteBrand = (brand: any) => {
+    setConfirmDelete({ type: "brand", id: brand.id, name: brand.name });
+  };
+
+  const requestDeleteCategory = (category: any) => {
+    setConfirmDelete({ type: "category", id: category.id, name: category.name });
+  };
+
+  const requestDeleteProduct = (product: any) => {
+    setConfirmDelete({ type: "product", id: product.id, name: product.name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete) return;
+    const { type, id } = confirmDelete;
+    setConfirmDelete(null);
+    if (type === "brand") await handleDeleteBrand(id);
+    else if (type === "category") await handleDeleteCategory(id);
+    else await handleDeleteProduct(id);
+  };
+
+  const confirmDeleteCopy = {
+    brand: { title: "Eliminar marca", noun: "la marca" },
+    category: { title: "Eliminar categoría", noun: "la categoría" },
+    product: { title: "Eliminar producto", noun: "el producto" },
+  } as const;
 
   // Cargar brands, categories y products del API
   useEffect(() => {
@@ -275,8 +310,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteBrand = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta marca?")) return;
-
     try {
       setLoading(true);
       const response = await fetch("/api/brands", {
@@ -370,8 +403,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta categoría?")) return;
-
     try {
       setCategoriesLoading(true);
       const response = await fetch("/api/categories", {
@@ -484,8 +515,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) return;
-
     try {
       setProductsLoading(true);
       const response = await fetch("/api/products", {
@@ -718,7 +747,7 @@ export default function AdminPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteBrand(brand.id)}
+                            onClick={() => requestDeleteBrand(brand)}
                             disabled={loading}
                           >
                             Eliminar
@@ -1012,7 +1041,7 @@ export default function AdminPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteProduct(product.id)}
+                            onClick={() => requestDeleteProduct(product)}
                             disabled={productsLoading}
                           >
                             Eliminar
@@ -1164,7 +1193,7 @@ export default function AdminPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteCategory(cat.id)}
+                            onClick={() => requestDeleteCategory(cat)}
                             disabled={categoriesLoading}
                           >
                             Eliminar
@@ -1202,6 +1231,19 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title={confirmDelete ? confirmDeleteCopy[confirmDelete.type].title : ""}
+        message={
+          confirmDelete
+            ? `¿Estás seguro de que deseas eliminar ${confirmDeleteCopy[confirmDelete.type].noun} "${confirmDelete.name}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        confirmLabel="Eliminar"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
