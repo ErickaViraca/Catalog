@@ -44,3 +44,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scroll delgado y sin botones de flecha, para listas internas (ej. los
+   filtros de Categorías/Marcas del catálogo) — look más moderno que la
+   barra de scroll nativa completa. */
+.scrollbar-minimal {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.scrollbar-minimal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+
+.scrollbar-minimal::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
