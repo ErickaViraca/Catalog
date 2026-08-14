@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
 import { FilterCheckbox } from "@/components/products/FilterCheckbox";
-import { normalizeApiProduct } from "@/src/lib/normalizeProduct";
+import { mockProducts, mockCategories, mockBrands } from "@/data/mock";
 
+// TODO: todavía no hay productos reales cargados en la DB, así que esta
+// página sigue usando los mocks (incluye brandId para poder probar el
+// filtro de marcas). Cuando haya datos reales, volver a fetch("/api/products")
+// con los mismos query params que ya soporta el backend (categoryIds,
+// brandIds, search, sort, page) — ver el commit de paginación para esa
+// versión.
 const PAGE_SIZE = 12;
 
 export default function ShopPage() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -21,31 +25,7 @@ export default function ShopPage() {
   );
   const [page, setPage] = useState(1);
 
-  const [products, setProducts] = useState<any[]>([]);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [productsLoading, setProductsLoading] = useState(false);
-
   const productsTopRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const [categoriesRes, brandsRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/brands"),
-        ]);
-        const categoriesData = await categoriesRes.json();
-        const brandsData = await brandsRes.json();
-        if (categoriesData.success) setCategories(categoriesData.data);
-        if (brandsData.success) setBrands(brandsData.data);
-      } catch (err) {
-        console.error("Error al obtener los filtros", err);
-      }
-    };
-
-    fetchFilters();
-  }, []);
 
   // Debounce de la búsqueda: espera a que el usuario deje de escribir
   useEffect(() => {
@@ -56,37 +36,44 @@ export default function ShopPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setProductsLoading(true);
-        const params = new URLSearchParams();
-        if (selectedCategoryIds.length) {
-          params.set("categoryIds", selectedCategoryIds.join(","));
-        }
-        if (selectedBrandIds.length) {
-          params.set("brandIds", selectedBrandIds.join(","));
-        }
-        if (searchTerm) params.set("search", searchTerm);
-        params.set("sort", sortBy);
-        params.set("page", String(page));
+  const filteredProducts = useMemo(() => {
+    let filtered = mockProducts;
 
-        const response = await fetch(`/api/products?${params.toString()}`);
-        const data = await response.json();
-        if (data.success) {
-          setProducts(data.data);
-          setTotalProducts(data.count ?? data.data.length);
-          setTotalPages(data.totalPages ?? 1);
-        }
-      } catch (err) {
-        console.error("Error al obtener los productos", err);
-      } finally {
-        setProductsLoading(false);
+    if (selectedCategoryIds.length) {
+      filtered = filtered.filter((p) => selectedCategoryIds.includes(p.categoryId));
+    }
+
+    if (selectedBrandIds.length) {
+      filtered = filtered.filter((p) => selectedBrandIds.includes(p.brandId));
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((p) => {
+        const brandName = mockBrands.find((b) => b.id === p.brandId)?.name.toLowerCase() ?? "";
+        return p.name.toLowerCase().includes(term) || brandName.includes(term);
+      });
+    }
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        case "name":
+        default:
+          return a.name.localeCompare(b.name);
       }
-    };
+    });
+  }, [selectedCategoryIds, selectedBrandIds, searchTerm, sortBy]);
 
-    fetchProducts();
-  }, [selectedCategoryIds, selectedBrandIds, searchTerm, sortBy, page]);
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
+  const products = useMemo(
+    () => filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredProducts, page]
+  );
 
   const toggleCategory = (id: string) => {
     setSelectedCategoryIds((prev) =>
@@ -134,7 +121,7 @@ export default function ShopPage() {
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
             <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
-              {categories.map((cat) => (
+              {mockCategories.map((cat) => (
                 <FilterCheckbox
                   key={cat.id}
                   label={cat.name}
@@ -149,7 +136,7 @@ export default function ShopPage() {
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Marcas</h3>
             <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
-              {brands.map((brand) => (
+              {mockBrands.map((brand) => (
                 <FilterCheckbox
                   key={brand.id}
                   label={brand.name}
@@ -200,9 +187,7 @@ export default function ShopPage() {
             </p>
           </div>
 
-          {productsLoading ? (
-            <div className="text-center py-12 text-gray-500">Cargando productos...</div>
-          ) : products.length === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-xl text-gray-600">No se encontraron productos</p>
               <Button
@@ -222,11 +207,7 @@ export default function ShopPage() {
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
                 {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={normalizeApiProduct(product)}
-                    hideAddToCart
-                  />
+                  <ProductCard key={product.id} product={product} hideAddToCart />
                 ))}
               </div>
 
