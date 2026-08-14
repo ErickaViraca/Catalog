@@ -11,7 +11,7 @@ export function Navbar() {
 
   return (
     <nav className="bg-gray-900 text-white sticky top-0 z-50 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <XiaomiLogo size={28} />
