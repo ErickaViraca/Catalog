@@ -4,13 +4,16 @@ import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
+import { Checkbox } from "@/components/form";
 import { normalizeApiProduct } from "@/src/lib/normalizeProduct";
 
 const PAGE_SIZE = 12;
 
 export default function ShopPage() {
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price-asc" | "price-desc">(
     "name"
@@ -25,19 +28,22 @@ export default function ShopPage() {
   const productsTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchFilters = async () => {
       try {
-        const response = await fetch("/api/categories");
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.data);
-        }
+        const [categoriesRes, brandsRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/brands"),
+        ]);
+        const categoriesData = await categoriesRes.json();
+        const brandsData = await brandsRes.json();
+        if (categoriesData.success) setCategories(categoriesData.data);
+        if (brandsData.success) setBrands(brandsData.data);
       } catch (err) {
-        console.error("Error al obtener las categorías", err);
+        console.error("Error al obtener los filtros", err);
       }
     };
 
-    fetchCategories();
+    fetchFilters();
   }, []);
 
   useEffect(() => {
@@ -45,7 +51,12 @@ export default function ShopPage() {
       try {
         setProductsLoading(true);
         const params = new URLSearchParams();
-        if (selectedCategory) params.set("categoryIds", selectedCategory);
+        if (selectedCategoryIds.length) {
+          params.set("categoryIds", selectedCategoryIds.join(","));
+        }
+        if (selectedBrandIds.length) {
+          params.set("brandIds", selectedBrandIds.join(","));
+        }
         if (searchTerm) params.set("search", searchTerm);
         params.set("sort", sortBy);
         params.set("page", String(page));
@@ -65,7 +76,21 @@ export default function ShopPage() {
     };
 
     fetchProducts();
-  }, [selectedCategory, searchTerm, sortBy, page]);
+  }, [selectedCategoryIds, selectedBrandIds, searchTerm, sortBy, page]);
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+    setPage(1);
+  };
+
+  const toggleBrand = (id: string) => {
+    setSelectedBrandIds((prev) =>
+      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
+    );
+    setPage(1);
+  };
 
   const goToPage = (newPage: number) => {
     setPage(newPage);
@@ -100,35 +125,29 @@ export default function ShopPage() {
           {/* Categories Filter */}
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
-            <div className="space-y-1">
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setPage(1);
-                }}
-                className={`block w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
-                  selectedCategory === null
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-gray-200"
-                }`}
-              >
-                Todas
-              </button>
+            <div className="space-y-2">
               {categories.map((cat) => (
-                <button
+                <Checkbox
                   key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setPage(1);
-                  }}
-                  className={`block w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
-                    selectedCategory === cat.id
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  {cat.name}
-                </button>
+                  label={cat.name}
+                  checked={selectedCategoryIds.includes(cat.id)}
+                  onChange={() => toggleCategory(cat.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Brands Filter */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-sm mb-2">Marcas</h3>
+            <div className="space-y-2">
+              {brands.map((brand) => (
+                <Checkbox
+                  key={brand.id}
+                  label={brand.name}
+                  checked={selectedBrandIds.includes(brand.id)}
+                  onChange={() => toggleBrand(brand.id)}
+                />
               ))}
             </div>
           </div>
@@ -168,7 +187,8 @@ export default function ShopPage() {
               <p className="text-xl text-gray-600">No se encontraron productos</p>
               <Button
                 onClick={() => {
-                  setSelectedCategory(null);
+                  setSelectedCategoryIds([]);
+                  setSelectedBrandIds([]);
                   setSearchTerm("");
                   setPage(1);
                 }}
