@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { db } from "../db/client";
 import { brands, NewBrand } from "../db/schema";
 
@@ -8,6 +8,15 @@ export class BrandRepository {
       return db.select().from(brands);
     }
     return db.select().from(brands).where(eq(brands.active, true));
+  }
+
+  // Usado por el buscador del catálogo: "buscar por producto o marca"
+  // también matchea productos cuya marca coincide con el término.
+  async findByNameSearch(term: string) {
+    return db
+      .select({ id: brands.id })
+      .from(brands)
+      .where(ilike(brands.name, `%${term}%`));
   }
 
   async findById(id: string) {
