@@ -168,7 +168,7 @@ export default function ShopPage() {
         {/* Products Grid */}
         <div>
           {/* Buscador (mitad de ancho) + paginación compacta, lados opuestos */}
-          <div ref={productsTopRef} className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div ref={productsTopRef} className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <input
               type="text"
               placeholder="Buscar por producto o marca..."
@@ -177,14 +177,6 @@ export default function ShopPage() {
               className="w-full sm:w-1/2 px-4 py-3 text-sm border border-border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
             />
             <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
-          </div>
-
-          <div className="mb-6">
-            <p className="text-gray-600">
-              {totalProducts > 0
-                ? `Mostrando ${rangeStart}–${rangeEnd} de ${totalProducts} productos`
-                : "Mostrando 0 productos"}
-            </p>
           </div>
 
           {products.length === 0 ? (
@@ -205,13 +197,24 @@ export default function ShopPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} hideAddToCart />
                 ))}
               </div>
 
-              <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
+              {/* Mismo layout que la fila de arriba: "Mostrando..." alineado
+                  con el buscador (mismo ancho/posición), paginación al lado opuesto */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="w-full sm:w-1/2">
+                  <p className="text-gray-600">
+                    {totalProducts > 0
+                      ? `Mostrando ${rangeStart}–${rangeEnd} de ${totalProducts} productos`
+                      : "Mostrando 0 productos"}
+                  </p>
+                </div>
+                <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
+              </div>
             </>
           )}
         </div>
