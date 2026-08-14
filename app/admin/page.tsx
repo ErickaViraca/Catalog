@@ -8,9 +8,11 @@ import { useToast } from "@/components/common/ToastProvider";
 import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { AlertModal } from "@/components/common/AlertModal";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 import { sortRows, SortDirection, SortState } from "@/src/lib/sortRows";
+import { BRAND_IN_USE_MESSAGE, CATEGORY_IN_USE_MESSAGE } from "@/src/lib/deleteMessages";
 import {
   combine,
   required,
@@ -107,12 +109,41 @@ export default function AdminPage() {
     id: string;
     name: string;
   } | null>(null);
+  // Si el item está en uso por productos, no se pide confirmación: se avisa directo
+  const [blockedDeleteMessage, setBlockedDeleteMessage] = useState<string | null>(null);
+  const [deleteChecking, setDeleteChecking] = useState(false);
 
-  const requestDeleteBrand = (brand: any) => {
+  const requestDeleteBrand = async (brand: any) => {
+    setDeleteChecking(true);
+    try {
+      const response = await fetch(`/api/products?brandId=${brand.id}`);
+      const data = await response.json();
+      if (data.success && data.count > 0) {
+        setBlockedDeleteMessage(BRAND_IN_USE_MESSAGE);
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleteChecking(false);
+    }
     setConfirmDelete({ type: "brand", id: brand.id, name: brand.name });
   };
 
-  const requestDeleteCategory = (category: any) => {
+  const requestDeleteCategory = async (category: any) => {
+    setDeleteChecking(true);
+    try {
+      const response = await fetch(`/api/products?categoryId=${category.id}`);
+      const data = await response.json();
+      if (data.success && data.count > 0) {
+        setBlockedDeleteMessage(CATEGORY_IN_USE_MESSAGE);
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleteChecking(false);
+    }
     setConfirmDelete({ type: "category", id: category.id, name: category.name });
   };
 
@@ -748,7 +779,7 @@ export default function AdminPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => requestDeleteBrand(brand)}
-                            disabled={loading}
+                            disabled={loading || deleteChecking}
                           >
                             Eliminar
                           </Button>
@@ -1194,7 +1225,7 @@ export default function AdminPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => requestDeleteCategory(cat)}
-                            disabled={categoriesLoading}
+                            disabled={categoriesLoading || deleteChecking}
                           >
                             Eliminar
                           </Button>
@@ -1243,6 +1274,13 @@ export default function AdminPage() {
         confirmLabel="Eliminar"
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDelete(null)}
+      />
+
+      <AlertModal
+        open={!!blockedDeleteMessage}
+        title="No se puede eliminar"
+        message={blockedDeleteMessage || ""}
+        onClose={() => setBlockedDeleteMessage(null)}
       />
     </div>
   );

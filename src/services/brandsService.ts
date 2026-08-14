@@ -1,5 +1,7 @@
 import { brandRepository } from "../repository/brandsRepository";
+import { productRepository } from "../repository/productsRepository";
 import { NewBrand } from "../db/schema";
+import { BRAND_IN_USE_MESSAGE } from "../lib/deleteMessages";
 
 export class BrandService {
   async getAllBrands(includeInactive = false) {
@@ -84,6 +86,11 @@ export class BrandService {
     const existing = await this.getBrandById(id);
     if (!existing) {
       throw new Error("Marca no encontrada");
+    }
+
+    const relatedProducts = await productRepository.findByBrandId(id);
+    if (relatedProducts.length > 0) {
+      throw new Error(BRAND_IN_USE_MESSAGE);
     }
 
     const result = await brandRepository.delete(id);

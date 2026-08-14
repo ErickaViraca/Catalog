@@ -1,5 +1,7 @@
 import { categoryRepository } from "../repository/categoriesRepository";
+import { productRepository } from "../repository/productsRepository";
 import { NewCategory } from "../db/schema";
+import { CATEGORY_IN_USE_MESSAGE } from "../lib/deleteMessages";
 
 export class CategoryService {
   async getAllCategories(includeInactive = false) {
@@ -89,6 +91,11 @@ export class CategoryService {
     const existing = await this.getCategoryById(id);
     if (!existing) {
       throw new Error("Categoría no encontrada");
+    }
+
+    const relatedProducts = await productRepository.findByCategoryId(id);
+    if (relatedProducts.length > 0) {
+      throw new Error(CATEGORY_IN_USE_MESSAGE);
     }
 
     const result = await categoryRepository.delete(id);
