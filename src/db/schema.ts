@@ -68,6 +68,7 @@ export const products = pgTable(
     brandId: uuid("brand_id").notNull(),
     active: boolean("active").default(true),
     featured: boolean("featured").default(false),
+    isNew: boolean("is_new").default(true),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },

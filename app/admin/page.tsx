@@ -5,7 +5,7 @@ import { mockBanners } from "@/data/mock";
 import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { useToast } from "@/components/common/ToastProvider";
-import { Input, Textarea, Select, Checkbox, Switch } from "@/components/form";
+import { Input, Textarea, Select, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AlertModal } from "@/components/common/AlertModal";
@@ -390,7 +390,9 @@ export default function AdminPage() {
     sku: "",
     categoryId: categories[0]?.id || "",
     brandId: brands[0]?.id || "",
+    active: true,
     featured: false,
+    isNew: true,
     imageUrl: "",
   });
 
@@ -438,7 +440,9 @@ export default function AdminPage() {
     sku: "",
     categoryId: "",
     brandId: "",
+    active: true,
     featured: false,
+    isNew: true,
     imageUrl: "",
   });
   const [editProductSubmitAttempted, setEditProductSubmitAttempted] = useState(false);
@@ -687,7 +691,9 @@ export default function AdminPage() {
         sku: "",
         categoryId: categories[0]?.id || "",
         brandId: brands[0]?.id || "",
+        active: true,
         featured: false,
+        isNew: true,
         imageUrl: "",
       });
       setProductSlugTouched(false);
@@ -713,7 +719,9 @@ export default function AdminPage() {
       sku: product.sku,
       categoryId: product.categoryId,
       brandId: product.brandId,
+      active: product.active,
       featured: product.featured,
+      isNew: product.isNew,
       imageUrl: product.imageUrl || "",
     });
     setEditProductSubmitAttempted(false);
@@ -1120,10 +1128,23 @@ export default function AdminPage() {
                   </option>
                 ))}
               </Select>
-              <Checkbox
+            </div>
+
+            <div className="mb-4 flex flex-wrap gap-6">
+              <Switch
+                label="Producto activo"
+                checked={newProduct.active}
+                onChange={(active) => setNewProduct({ ...newProduct, active })}
+              />
+              <Switch
                 label="Producto destacado"
                 checked={newProduct.featured}
                 onChange={(featured) => setNewProduct({ ...newProduct, featured })}
+              />
+              <Switch
+                label="Producto nuevo"
+                checked={newProduct.isNew}
+                onChange={(isNew) => setNewProduct({ ...newProduct, isNew })}
               />
             </div>
 
@@ -1715,10 +1736,23 @@ export default function AdminPage() {
               </option>
             ))}
           </Select>
-          <Checkbox
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-6">
+          <Switch
+            label="Producto activo"
+            checked={editProductForm.active}
+            onChange={(active) => setEditProductForm((prev) => ({ ...prev, active }))}
+          />
+          <Switch
             label="Producto destacado"
             checked={editProductForm.featured}
             onChange={(featured) => setEditProductForm((prev) => ({ ...prev, featured }))}
+          />
+          <Switch
+            label="Producto nuevo"
+            checked={editProductForm.isNew}
+            onChange={(isNew) => setEditProductForm((prev) => ({ ...prev, isNew }))}
           />
         </div>
 

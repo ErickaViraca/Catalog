@@ -100,7 +100,9 @@ export class ProductService {
     sku: string;
     categoryId: string;
     brandId: string;
+    active?: boolean;
     featured?: boolean;
+    isNew?: boolean;
     imageUrl?: string;
   }) {
     if (!data.name || data.name.trim().length === 0) {
@@ -178,8 +180,9 @@ export class ProductService {
       sku: data.sku.trim(),
       categoryId: data.categoryId,
       brandId: data.brandId,
-      active: true,
+      active: data.active ?? true,
       featured: data.featured ?? false,
+      isNew: data.isNew ?? true,
     });
 
     const product = result[0];
@@ -209,7 +212,9 @@ export class ProductService {
       sku: string;
       categoryId: string;
       brandId: string;
+      active: boolean;
       featured: boolean;
+      isNew: boolean;
       imageUrl: string;
     }>
   ) {
@@ -274,7 +279,9 @@ export class ProductService {
     if (data.sku) updateData.sku = data.sku.trim();
     if (data.categoryId) updateData.categoryId = data.categoryId;
     if (data.brandId) updateData.brandId = data.brandId;
+    if (data.active !== undefined) updateData.active = data.active;
     if (data.featured !== undefined) updateData.featured = data.featured;
+    if (data.isNew !== undefined) updateData.isNew = data.isNew;
 
     const result = await productRepository.update(id, updateData);
     const product = result[0];

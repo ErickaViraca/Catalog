@@ -112,7 +112,9 @@ export async function POST(request: NextRequest) {
       sku: body.sku,
       categoryId: body.categoryId,
       brandId: body.brandId,
+      active: body.active,
       featured: body.featured,
+      isNew: body.isNew,
       imageUrl: body.imageUrl,
     });
 
