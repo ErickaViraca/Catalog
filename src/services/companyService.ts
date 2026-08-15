@@ -8,6 +8,7 @@ export class CompanyService {
 
   async updateCompany(data: {
     name?: string;
+    description?: string;
     dollarPriceBs?: string | number;
     phones?: string[];
     addresses?: string[];
@@ -24,6 +25,15 @@ export class CompanyService {
         throw new Error("El nombre de la empresa es requerido");
       }
       updateData.name = data.name.trim();
+    }
+
+    if (data.description !== undefined) {
+      const description = data.description.trim();
+      const wordCount = description.length ? description.split(/\s+/).length : 0;
+      if (wordCount > 50) {
+        throw new Error("La descripción no puede superar las 50 palabras");
+      }
+      updateData.description = description;
     }
 
     if (data.dollarPriceBs !== undefined) {

@@ -37,6 +37,17 @@ export function maxLength(max: number, fieldLabel: string): Validator {
   };
 }
 
+export function maxWords(max: number, fieldLabel: string): Validator {
+  return (value) => {
+    if (typeof value !== "string" || value.trim().length === 0) return null;
+    const wordCount = value.trim().split(/\s+/).length;
+    if (wordCount > max) {
+      return `${fieldLabel} no puede superar las ${max} palabras`;
+    }
+    return null;
+  };
+}
+
 export function positiveNumber(fieldLabel: string): Validator {
   return (value) => {
     if (value === "" || value === undefined || value === null) return null;

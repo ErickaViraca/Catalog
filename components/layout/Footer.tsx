@@ -15,6 +15,7 @@ import {
 export function Footer() {
   const company = useCompany();
   const companyName = company?.name ?? "MiTiendaXiaomi";
+  const description = company?.description?.trim() || COMPANY_DESCRIPTION;
   const addresses = company?.addresses ?? [];
   const phones = company?.phones ?? [];
   const whatsappLink = buildWhatsAppLink(phones[0] ?? "");
@@ -25,7 +26,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-lg mb-4">{companyName}</h3>
-            <p className="text-gray-400 text-sm">{COMPANY_DESCRIPTION}</p>
+            <p className="text-gray-400 text-sm">{description}</p>
             <div className="flex gap-3 mt-4">
               <a
                 href={SOCIAL_LINKS.facebook}

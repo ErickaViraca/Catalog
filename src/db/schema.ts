@@ -117,6 +117,7 @@ export const productImages = pgTable(
 export const companies = pgTable("companies", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
+  description: text("description").notNull().default(""),
   dollarPriceBs: decimal("dollar_price_bs", { precision: 10, scale: 2 }).notNull(),
   phones: jsonb("phones").$type<string[]>().notNull().default([]),
   addresses: jsonb("addresses").$type<string[]>().notNull().default([]),

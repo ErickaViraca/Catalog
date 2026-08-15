@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export interface CompanyData {
   id: string;
   name: string;
+  description: string;
   dollarPriceBs: string;
   phones: string[];
   addresses: string[];

@@ -26,6 +26,7 @@ import {
   required,
   minLength,
   maxLength,
+  maxWords,
   alphanumericFormat,
   nonNegativeInteger,
   selected,
@@ -268,6 +269,7 @@ export default function AdminPage() {
   const [companySubmitAttempted, setCompanySubmitAttempted] = useState(false);
   const [companyForm, setCompanyForm] = useState({
     name: "",
+    description: "",
     dollarPriceBs: "",
     phones: [""],
     addresses: [""],
@@ -275,6 +277,7 @@ export default function AdminPage() {
 
   const companyValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
+    description: maxWords(50, "La descripción"),
     dollarPriceBs: (value: unknown) => {
       const num = Number(value);
       if (!value || Number.isNaN(num) || num <= 0) {
@@ -293,6 +296,7 @@ export default function AdminPage() {
       if (data.success) {
         setCompanyForm({
           name: data.data.name,
+          description: data.data.description || "",
           dollarPriceBs: data.data.dollarPriceBs,
           phones: data.data.phones.length ? data.data.phones : [""],
           addresses: data.data.addresses.length ? data.data.addresses : [""],
@@ -367,6 +371,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: companyForm.name,
+          description: companyForm.description,
           dollarPriceBs: companyForm.dollarPriceBs,
           phones,
           addresses,
@@ -1472,7 +1477,7 @@ export default function AdminPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <Input
                   label="Nombre de la Empresa"
                   required
@@ -1482,6 +1487,19 @@ export default function AdminPage() {
                   helperText="Se muestra en el header y el footer del sitio"
                   onChange={(name) => setCompanyForm((prev) => ({ ...prev, name }))}
                 />
+                <Textarea
+                  label="Descripción de la Empresa"
+                  value={companyForm.description}
+                  validate={companyValidators.description}
+                  forceTouched={companySubmitAttempted}
+                  helperText="Máximo 50 palabras. Se muestra en el footer del sitio"
+                  onChange={(description) =>
+                    setCompanyForm((prev) => ({ ...prev, description }))
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <Input
                   label="Valor del Dólar (Bs)"
                   required

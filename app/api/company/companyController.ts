@@ -41,6 +41,7 @@ export async function PATCH(request: NextRequest) {
 
     const company = await companyService.updateCompany({
       name: body.name,
+      description: body.description,
       dollarPriceBs: body.dollarPriceBs,
       phones: body.phones,
       addresses: body.addresses,
