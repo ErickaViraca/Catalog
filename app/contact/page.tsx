@@ -37,9 +37,19 @@ export default function ContactPage() {
           <h3 className="font-semibold mb-2">Teléfonos</h3>
           <ul className="space-y-1 text-gray-600 text-sm">
             {phones.map((phone, index) => (
-              <li key={index}>
+              <li key={index} className="flex items-center gap-2">
                 <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-primary">
                   {phone}
+                </a>
+                <a
+                  href={buildWhatsAppLink(phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Escribir por WhatsApp"
+                  aria-label="Escribir por WhatsApp"
+                  className="text-gray-400 hover:text-primary"
+                >
+                  <WhatsAppIcon size={16} />
                 </a>
               </li>
             ))}

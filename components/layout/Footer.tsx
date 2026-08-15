@@ -94,6 +94,16 @@ export function Footer() {
                   <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-white">
                     {phone}
                   </a>
+                  <a
+                    href={buildWhatsAppLink(phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Escribir por WhatsApp"
+                    aria-label="Escribir por WhatsApp"
+                    className="text-gray-500 hover:text-white"
+                  >
+                    <WhatsAppIcon size={16} />
+                  </a>
                 </li>
               ))}
               <li className="flex items-center gap-2">

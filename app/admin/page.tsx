@@ -1523,7 +1523,10 @@ export default function AdminPage() {
                     <div key={index} className="flex gap-2">
                       <Input
                         id={`phone-${index}`}
+                        required
                         value={phone}
+                        validate={required("El teléfono")}
+                        forceTouched={companySubmitAttempted}
                         onChange={(value) => updatePhoneAt(index, value)}
                       />
                       {companyForm.phones.length > 1 && (
