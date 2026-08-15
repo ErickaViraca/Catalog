@@ -1,7 +1,7 @@
 import { brandRepository } from "../repository/brandsRepository";
 import { productRepository } from "../repository/productsRepository";
 import { NewBrand } from "../db/schema";
-import { BRAND_IN_USE_MESSAGE } from "../lib/deleteMessages";
+import { BRAND_IN_USE_MESSAGE, BRAND_IN_USE_DEACTIVATE_MESSAGE } from "../lib/deleteMessages";
 
 export class BrandService {
   async getAllBrands(includeInactive = false) {
@@ -68,6 +68,13 @@ export class BrandService {
       const slugExists = await brandRepository.findBySlug(data.slug);
       if (slugExists.length > 0) {
         throw new Error("El slug ya existe");
+      }
+    }
+
+    if (data.active === false && existing.active) {
+      const relatedProducts = await productRepository.findByBrandId(id);
+      if (relatedProducts.length > 0) {
+        throw new Error(BRAND_IN_USE_DEACTIVATE_MESSAGE);
       }
     }
 

@@ -15,7 +15,12 @@ import { PencilIcon, TrashIcon } from "@/components/common/icons";
 import { FORM_STYLES } from "@/src/config/ui";
 import { slugify, truncateSlugWords, randomSlugSuffix } from "@/src/lib/slugify";
 import { sortRows, SortDirection, SortState } from "@/src/lib/sortRows";
-import { BRAND_IN_USE_MESSAGE, CATEGORY_IN_USE_MESSAGE } from "@/src/lib/deleteMessages";
+import {
+  BRAND_IN_USE_MESSAGE,
+  CATEGORY_IN_USE_MESSAGE,
+  BRAND_IN_USE_DEACTIVATE_MESSAGE,
+  CATEGORY_IN_USE_DEACTIVATE_MESSAGE,
+} from "@/src/lib/deleteMessages";
 import {
   combine,
   required,
@@ -136,6 +141,7 @@ export default function AdminPage() {
   } | null>(null);
   // Si el item está en uso por productos, no se pide confirmación: se avisa directo
   const [blockedDeleteMessage, setBlockedDeleteMessage] = useState<string | null>(null);
+  const [blockedDeleteTitle, setBlockedDeleteTitle] = useState("No se puede eliminar");
   const [deleteChecking, setDeleteChecking] = useState(false);
 
   const requestDeleteBrand = async (brand: any) => {
@@ -144,6 +150,7 @@ export default function AdminPage() {
       const response = await fetch(`/api/products?brandId=${brand.id}`);
       const data = await response.json();
       if (data.success && data.count > 0) {
+        setBlockedDeleteTitle("No se puede eliminar");
         setBlockedDeleteMessage(BRAND_IN_USE_MESSAGE);
         return;
       }
@@ -161,6 +168,7 @@ export default function AdminPage() {
       const response = await fetch(`/api/products?categoryId=${category.id}`);
       const data = await response.json();
       if (data.success && data.count > 0) {
+        setBlockedDeleteTitle("No se puede eliminar");
         setBlockedDeleteMessage(CATEGORY_IN_USE_MESSAGE);
         return;
       }
@@ -505,6 +513,20 @@ export default function AdminPage() {
       return;
     }
 
+    if (editingBrand.active && !editBrandForm.active) {
+      try {
+        const response = await fetch(`/api/products?brandId=${editingBrand.id}`);
+        const data = await response.json();
+        if (data.success && data.count > 0) {
+          setBlockedDeleteTitle("No se puede desactivar");
+          setBlockedDeleteMessage(BRAND_IN_USE_DEACTIVATE_MESSAGE);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     try {
       setLoading(true);
       const response = await fetch("/api/brands", {
@@ -607,6 +629,20 @@ export default function AdminPage() {
     if (Object.keys(errors).length > 0) {
       showError("Revisa los campos marcados en rojo");
       return;
+    }
+
+    if (editingCategory.active && !editCategoryForm.active) {
+      try {
+        const response = await fetch(`/api/products?categoryId=${editingCategory.id}`);
+        const data = await response.json();
+        if (data.success && data.count > 0) {
+          setBlockedDeleteTitle("No se puede desactivar");
+          setBlockedDeleteMessage(CATEGORY_IN_USE_DEACTIVATE_MESSAGE);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     try {
@@ -1547,7 +1583,7 @@ export default function AdminPage() {
 
       <AlertModal
         open={!!blockedDeleteMessage}
-        title="No se puede eliminar"
+        title={blockedDeleteTitle}
         message={blockedDeleteMessage || ""}
         onClose={() => setBlockedDeleteMessage(null)}
       />

@@ -1,7 +1,7 @@
 import { categoryRepository } from "../repository/categoriesRepository";
 import { productRepository } from "../repository/productsRepository";
 import { NewCategory } from "../db/schema";
-import { CATEGORY_IN_USE_MESSAGE } from "../lib/deleteMessages";
+import { CATEGORY_IN_USE_MESSAGE, CATEGORY_IN_USE_DEACTIVATE_MESSAGE } from "../lib/deleteMessages";
 
 export class CategoryService {
   async getAllCategories(includeInactive = false) {
@@ -71,6 +71,13 @@ export class CategoryService {
       const slugExists = await categoryRepository.findBySlug(data.slug);
       if (slugExists.length > 0) {
         throw new Error("El slug ya existe");
+      }
+    }
+
+    if (data.active === false && existing.active) {
+      const relatedProducts = await productRepository.findByCategoryId(id);
+      if (relatedProducts.length > 0) {
+        throw new Error(CATEGORY_IN_USE_DEACTIVATE_MESSAGE);
       }
     }
 
