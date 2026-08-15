@@ -7,6 +7,7 @@ import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
 import { useToast } from "@/components/common/ToastProvider";
 import { Input, Textarea, Select, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AlertModal } from "@/components/common/AlertModal";
 import { Modal } from "@/components/common/Modal";
@@ -1162,41 +1163,13 @@ export default function AdminPage() {
             </div>
 
             <div className="mb-4">
-              <h3 className="font-semibold text-sm mb-2 text-label">Imagen del Producto</h3>
-              <div className="flex items-center gap-4">
-                {newProduct.imageUrl ? (
-                  <img
-                    src={newProduct.imageUrl}
-                    alt="Vista previa"
-                    className="w-16 h-16 object-cover rounded-lg border border-border"
-                  />
-                ) : (
-                  <ImagePlaceholder size={64} />
-                )}
-                <div>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/avif"
-                    onChange={handleProductImageUpload}
-                    disabled={productImageUploading}
-                    className="text-sm"
-                  />
-                  {productImageUploading && (
-                    <p className="text-sm text-muted mt-1">Subiendo imagen...</p>
-                  )}
-                  {newProduct.imageUrl && !productImageUploading && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setNewProduct((prev) => ({ ...prev, imageUrl: "" }))
-                      }
-                      className="text-sm text-danger hover:underline mt-1"
-                    >
-                      Quitar imagen
-                    </button>
-                  )}
-                </div>
-              </div>
+              <ImageUploader
+                mode="create"
+                imageUrl={newProduct.imageUrl}
+                uploading={productImageUploading}
+                onUpload={handleProductImageUpload}
+                onRemove={() => setNewProduct((prev) => ({ ...prev, imageUrl: "" }))}
+              />
             </div>
 
             <div className="flex gap-2">
@@ -1770,41 +1743,13 @@ export default function AdminPage() {
         </div>
 
         <div>
-          <h3 className="font-semibold text-sm mb-2 text-label">Imagen del Producto</h3>
-          <div className="flex items-center gap-4">
-            {editProductForm.imageUrl ? (
-              <img
-                src={editProductForm.imageUrl}
-                alt="Vista previa"
-                className="w-16 h-16 object-cover rounded-lg border border-border"
-              />
-            ) : (
-              <ImagePlaceholder size={64} />
-            )}
-            <div>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                onChange={handleEditProductImageUpload}
-                disabled={editProductImageUploading}
-                className="text-sm"
-              />
-              {editProductImageUploading && (
-                <p className="text-sm text-muted mt-1">Subiendo imagen...</p>
-              )}
-              {editProductForm.imageUrl && !editProductImageUploading && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditProductForm((prev) => ({ ...prev, imageUrl: "" }))
-                  }
-                  className="text-sm text-danger hover:underline mt-1"
-                >
-                  Quitar imagen
-                </button>
-              )}
-            </div>
-          </div>
+          <ImageUploader
+            mode="edit"
+            imageUrl={editProductForm.imageUrl}
+            uploading={editProductImageUploading}
+            onUpload={handleEditProductImageUpload}
+            onRemove={() => setEditProductForm((prev) => ({ ...prev, imageUrl: "" }))}
+          />
         </div>
       </Modal>
     </div>
