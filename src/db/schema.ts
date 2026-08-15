@@ -21,6 +21,7 @@ export const brands = pgTable(
     logo: text("logo"), // S3 URL
     description: text("description"),
     active: boolean("active").default(true),
+    isDeleted: boolean("is_deleted").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -40,6 +41,7 @@ export const categories = pgTable(
     image: text("image"), // S3 URL
     parentCategoryId: uuid("parent_category_id"), // Para subcategorías
     active: boolean("active").default(true),
+    isDeleted: boolean("is_deleted").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -69,6 +71,7 @@ export const products = pgTable(
     active: boolean("active").default(true),
     featured: boolean("featured").default(false),
     isNew: boolean("is_new").default(true),
+    isDeleted: boolean("is_deleted").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },

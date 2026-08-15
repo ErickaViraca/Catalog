@@ -5,8 +5,8 @@ import { productImageRepository } from "../repository/productImagesRepository";
 import { NewProduct } from "../db/schema";
 
 export class ProductService {
-  async getAllProducts() {
-    const items = await productRepository.findAll();
+  async getAllProducts(includeInactive = false) {
+    const items = await productRepository.findAll(includeInactive);
     const primaryImages = await productImageRepository.findPrimaryByProductIds(
       items.map((item) => item.id)
     );

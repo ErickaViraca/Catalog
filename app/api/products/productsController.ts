@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/src/lib/auth";
 import { requireAuth } from "@/src/lib/authGuard";
 import { productService } from "@/src/services/productsService";
 
@@ -76,8 +77,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // GET /api/products
-    const products = await productService.getAllProducts();
+    // GET /api/products (?includeInactive=true solo tiene efecto si hay sesión)
+    let includeInactive = false;
+    if (url.searchParams.get("includeInactive") === "true") {
+      const session = await auth();
+      includeInactive = !!session?.user;
+    }
+
+    const products = await productService.getAllProducts(includeInactive);
     return NextResponse.json({
       success: true,
       data: products,

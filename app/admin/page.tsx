@@ -240,7 +240,7 @@ export default function AdminPage() {
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products?includeInactive=true");
       const data = await response.json();
 
       if (data.success) {

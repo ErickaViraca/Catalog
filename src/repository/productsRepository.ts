@@ -15,15 +15,21 @@ export interface ProductFilterOptions {
 }
 
 export class ProductRepository {
-  async findAll() {
-    return db.select().from(products).where(eq(products.active, true));
+  async findAll(includeInactive = false) {
+    if (includeInactive) {
+      return db.select().from(products).where(eq(products.isDeleted, false));
+    }
+    return db
+      .select()
+      .from(products)
+      .where(and(eq(products.active, true), eq(products.isDeleted, false)));
   }
 
   async findById(id: string) {
     return db
       .select()
       .from(products)
-      .where(eq(products.id, id))
+      .where(and(eq(products.id, id), eq(products.isDeleted, false)))
       .limit(1);
   }
 
@@ -31,7 +37,7 @@ export class ProductRepository {
     return db
       .select()
       .from(products)
-      .where(eq(products.slug, slug))
+      .where(and(eq(products.slug, slug), eq(products.isDeleted, false)))
       .limit(1);
   }
 
@@ -39,7 +45,7 @@ export class ProductRepository {
     return db
       .select()
       .from(products)
-      .where(eq(products.sku, sku))
+      .where(and(eq(products.sku, sku), eq(products.isDeleted, false)))
       .limit(1);
   }
 
@@ -47,20 +53,20 @@ export class ProductRepository {
     return db
       .select()
       .from(products)
-      .where(eq(products.categoryId, categoryId));
+      .where(and(eq(products.categoryId, categoryId), eq(products.isDeleted, false)));
   }
 
   async findByBrandId(brandId: string) {
     return db
       .select()
       .from(products)
-      .where(eq(products.brandId, brandId));
+      .where(and(eq(products.brandId, brandId), eq(products.isDeleted, false)));
   }
 
   // Filtro combinado para el catálogo público: categorías/marcas son OR
   // dentro de cada grupo, y AND entre grupos (categoría Y marca Y búsqueda).
   async findFiltered(options: ProductFilterOptions) {
-    const conditions: SQL[] = [eq(products.active, true)];
+    const conditions: SQL[] = [eq(products.active, true), eq(products.isDeleted, false)];
 
     if (options.categoryIds?.length) {
       conditions.push(inArray(products.categoryId, options.categoryIds));
@@ -116,8 +122,13 @@ export class ProductRepository {
       .returning();
   }
 
+  // Soft delete: nunca se borra la fila, solo se marca is_deleted = true.
   async delete(id: string) {
-    return db.delete(products).where(eq(products.id, id)).returning();
+    return db
+      .update(products)
+      .set({ isDeleted: true })
+      .where(eq(products.id, id))
+      .returning();
   }
 
   async toggleActive(id: string, active: boolean) {

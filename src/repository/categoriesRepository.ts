@@ -1,20 +1,23 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { categories, NewCategory } from "../db/schema";
 
 export class CategoryRepository {
   async findAll(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(categories);
+      return db.select().from(categories).where(eq(categories.isDeleted, false));
     }
-    return db.select().from(categories).where(eq(categories.active, true));
+    return db
+      .select()
+      .from(categories)
+      .where(and(eq(categories.active, true), eq(categories.isDeleted, false)));
   }
 
   async findById(id: string) {
     return db
       .select()
       .from(categories)
-      .where(eq(categories.id, id))
+      .where(and(eq(categories.id, id), eq(categories.isDeleted, false)))
       .limit(1);
   }
 
@@ -22,7 +25,7 @@ export class CategoryRepository {
     return db
       .select()
       .from(categories)
-      .where(eq(categories.slug, slug))
+      .where(and(eq(categories.slug, slug), eq(categories.isDeleted, false)))
       .limit(1);
   }
 
@@ -38,8 +41,13 @@ export class CategoryRepository {
       .returning();
   }
 
+  // Soft delete: nunca se borra la fila, solo se marca is_deleted = true.
   async delete(id: string) {
-    return db.delete(categories).where(eq(categories.id, id)).returning();
+    return db
+      .update(categories)
+      .set({ isDeleted: true })
+      .where(eq(categories.id, id))
+      .returning();
   }
 
   async toggleActive(id: string, active: boolean) {
