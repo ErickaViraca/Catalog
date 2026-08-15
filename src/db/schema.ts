@@ -114,13 +114,20 @@ export const productImages = pgTable(
 // nombre, cotización del dólar en bolivianos, teléfonos y direcciones.
 // phones/addresses son listas cortas mantenidas a mano por el admin, no
 // datos relacionales, así que van como jsonb en vez de tablas aparte.
+export interface CompanyAddress {
+  address: string;
+  // Link de Google Maps ingresado manualmente por el admin (no se genera
+  // automáticamente) — ver Configuración > Direcciones.
+  mapsUrl: string;
+}
+
 export const companies = pgTable("companies", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   dollarPriceBs: decimal("dollar_price_bs", { precision: 10, scale: 2 }).notNull(),
   phones: jsonb("phones").$type<string[]>().notNull().default([]),
-  addresses: jsonb("addresses").$type<string[]>().notNull().default([]),
+  addresses: jsonb("addresses").$type<CompanyAddress[]>().notNull().default([]),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

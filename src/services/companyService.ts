@@ -1,4 +1,5 @@
 import { companyRepository } from "../repository/companyRepository";
+import { CompanyAddress } from "../db/schema";
 
 export class CompanyService {
   async getCompany() {
@@ -11,7 +12,7 @@ export class CompanyService {
     description?: string;
     dollarPriceBs?: string | number;
     phones?: string[];
-    addresses?: string[];
+    addresses?: CompanyAddress[];
   }) {
     const existing = await this.getCompany();
     if (!existing) {
@@ -53,9 +54,18 @@ export class CompanyService {
     }
 
     if (data.addresses !== undefined) {
-      const addresses = data.addresses.map((address) => address.trim()).filter(Boolean);
+      const addresses = data.addresses
+        .map((entry) => ({
+          address: entry.address?.trim() ?? "",
+          mapsUrl: entry.mapsUrl?.trim() ?? "",
+        }))
+        .filter((entry) => entry.address);
+
       if (addresses.length === 0) {
         throw new Error("Debe haber al menos una dirección");
+      }
+      if (addresses.some((entry) => !entry.mapsUrl)) {
+        throw new Error("Cada dirección debe tener un link de Google Maps");
       }
       updateData.addresses = addresses;
     }

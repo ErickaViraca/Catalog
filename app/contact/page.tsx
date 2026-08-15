@@ -26,8 +26,20 @@ export default function ContactPage() {
           <MapPinIcon size={24} className="text-gray-400 mb-3" />
           <h3 className="font-semibold mb-2">Nuestras tiendas</h3>
           <ul className="space-y-1 text-gray-600 text-sm">
-            {addresses.map((address, index) => (
-              <li key={index}>{address}</li>
+            {addresses.map((item, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <span>{item.address}</span>
+                <a
+                  href={item.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Abrir en Maps"
+                  aria-label="Abrir en Maps"
+                  className="text-gray-400 hover:text-primary"
+                >
+                  <MapPinIcon size={14} />
+                </a>
+              </li>
             ))}
           </ul>
         </div>

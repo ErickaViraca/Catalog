@@ -82,10 +82,19 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Contacto</h4>
             <ul className="space-y-3 text-gray-400 text-sm">
-              {addresses.map((address, index) => (
+              {addresses.map((item, index) => (
                 <li key={`address-${index}`} className="flex items-start gap-2">
-                  <MapPinIcon size={16} className="mt-0.5 shrink-0 text-gray-500" />
-                  <span>{address}</span>
+                  <a
+                    href={item.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Abrir en Maps"
+                    aria-label="Abrir en Maps"
+                    className="mt-0.5 shrink-0 text-gray-500 hover:text-white"
+                  >
+                    <MapPinIcon size={16} />
+                  </a>
+                  <span>{item.address}</span>
                 </li>
               ))}
               {phones.map((phone, index) => (

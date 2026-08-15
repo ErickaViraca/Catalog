@@ -272,7 +272,7 @@ export default function AdminPage() {
     description: "",
     dollarPriceBs: "",
     phones: [""],
-    addresses: [""],
+    addresses: [{ address: "", mapsUrl: "" }],
   });
 
   const companyValidators = {
@@ -299,7 +299,9 @@ export default function AdminPage() {
           description: data.data.description || "",
           dollarPriceBs: data.data.dollarPriceBs,
           phones: data.data.phones.length ? data.data.phones : [""],
-          addresses: data.data.addresses.length ? data.data.addresses : [""],
+          addresses: data.data.addresses.length
+            ? data.data.addresses
+            : [{ address: "", mapsUrl: "" }],
         });
       } else {
         showError(data.error || "Error al obtener la configuración");
@@ -327,15 +329,18 @@ export default function AdminPage() {
       phones: prev.phones.filter((_, i) => i !== index),
     }));
 
-  const updateAddressAt = (index: number, value: string) => {
+  const updateAddressAt = (index: number, field: "address" | "mapsUrl", value: string) => {
     setCompanyForm((prev) => {
       const addresses = [...prev.addresses];
-      addresses[index] = value;
+      addresses[index] = { ...addresses[index], [field]: value };
       return { ...prev, addresses };
     });
   };
   const addAddress = () =>
-    setCompanyForm((prev) => ({ ...prev, addresses: [...prev.addresses, ""] }));
+    setCompanyForm((prev) => ({
+      ...prev,
+      addresses: [...prev.addresses, { address: "", mapsUrl: "" }],
+    }));
   const removeAddress = (index: number) =>
     setCompanyForm((prev) => ({
       ...prev,
@@ -352,8 +357,8 @@ export default function AdminPage() {
 
     const phones = companyForm.phones.map((phone) => phone.trim()).filter(Boolean);
     const addresses = companyForm.addresses
-      .map((address) => address.trim())
-      .filter(Boolean);
+      .map((entry) => ({ address: entry.address.trim(), mapsUrl: entry.mapsUrl.trim() }))
+      .filter((entry) => entry.address);
 
     if (phones.length === 0) {
       showError("Debe haber al menos un teléfono de contacto");
@@ -361,6 +366,10 @@ export default function AdminPage() {
     }
     if (addresses.length === 0) {
       showError("Debe haber al menos una dirección");
+      return;
+    }
+    if (addresses.some((entry) => !entry.mapsUrl)) {
+      showError("Cada dirección debe tener un link de Google Maps");
       return;
     }
 
@@ -1552,19 +1561,28 @@ export default function AdminPage() {
 
               <div className="mb-6">
                 <h3 className="font-semibold text-sm mb-2 text-label">Direcciones</h3>
-                <div className="space-y-2">
-                  {companyForm.addresses.map((address, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        id={`address-${index}`}
-                        value={address}
-                        onChange={(value) => updateAddressAt(index, value)}
-                      />
+                <div className="space-y-3">
+                  {companyForm.addresses.map((entry, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          id={`address-${index}`}
+                          placeholder="Dirección"
+                          value={entry.address}
+                          onChange={(value) => updateAddressAt(index, "address", value)}
+                        />
+                        <Input
+                          id={`address-maps-url-${index}`}
+                          placeholder="Link de Google Maps"
+                          value={entry.mapsUrl}
+                          onChange={(value) => updateAddressAt(index, "mapsUrl", value)}
+                        />
+                      </div>
                       {companyForm.addresses.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeAddress(index)}
-                          className="text-sm text-danger hover:underline px-2 shrink-0"
+                          className="text-sm text-danger hover:underline px-2 shrink-0 mt-2"
                         >
                           Quitar
                         </button>
