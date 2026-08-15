@@ -1305,11 +1305,6 @@ export default function AdminPage() {
                   }));
                 }}
               />
-              <Input
-                label="URL de la Imagen"
-                value={newCategory.image}
-                onChange={(image) => setNewCategory({ ...newCategory, image })}
-              />
               <Textarea
                 label="Descripción"
                 value={newCategory.description}
@@ -1614,11 +1609,6 @@ export default function AdminPage() {
             validate={categoryValidators.name}
             forceTouched={editCategorySubmitAttempted}
             onChange={(name) => setEditCategoryForm((prev) => ({ ...prev, name }))}
-          />
-          <Input
-            label="URL de la Imagen"
-            value={editCategoryForm.image}
-            onChange={(image) => setEditCategoryForm((prev) => ({ ...prev, image }))}
           />
           <Textarea
             label="Descripción"
