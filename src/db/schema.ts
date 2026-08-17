@@ -110,7 +110,7 @@ export const productImages = pgTable(
 );
 
 // COMPANIES TABLE
-// Fila única con los datos editables desde /admin (sección Configuración):
+// Fila única con los datos editables desde /adminMiTiendaSmart26 (sección Configuración):
 // nombre, cotización del dólar en bolivianos, teléfonos y direcciones.
 // phones/addresses son listas cortas mantenidas a mano por el admin, no
 // datos relacionales, así que van como jsonb en vez de tablas aparte.
@@ -128,6 +128,9 @@ export const companies = pgTable("companies", {
   dollarPriceBs: decimal("dollar_price_bs", { precision: 10, scale: 2 }).notNull(),
   phones: jsonb("phones").$type<string[]>().notNull().default([]),
   addresses: jsonb("addresses").$type<CompanyAddress[]>().notNull().default([]),
+  facebookUrl: text("facebook_url").notNull().default(""),
+  whatsappUrl: text("whatsapp_url").notNull().default(""),
+  instagramUrl: text("instagram_url").notNull().default(""),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

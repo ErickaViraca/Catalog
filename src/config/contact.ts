@@ -1,6 +1,6 @@
 // Descripción, email y redes sociales de la tienda: cambian poco, así que
 // siguen viviendo en data/company.json. El nombre, teléfonos y direcciones
-// SÍ cambian seguido y son editables desde /admin > Configuración, por eso
+// SÍ cambian seguido y son editables desde /adminMiTiendaSmart26 > Configuración, por eso
 // viven en la tabla "companies" — ver src/hooks/useCompany.ts para leerlos.
 
 import company from "@/data/company.json";

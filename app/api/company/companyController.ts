@@ -45,6 +45,9 @@ export async function PATCH(request: NextRequest) {
       dollarPriceBs: body.dollarPriceBs,
       phones: body.phones,
       addresses: body.addresses,
+      facebookUrl: body.facebookUrl,
+      whatsappUrl: body.whatsappUrl,
+      instagramUrl: body.instagramUrl,
     });
 
     return NextResponse.json({

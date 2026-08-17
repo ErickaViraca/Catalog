@@ -273,6 +273,9 @@ export default function AdminPage() {
     dollarPriceBs: "",
     phones: [""],
     addresses: [{ address: "", mapsUrl: "" }],
+    facebookUrl: "",
+    whatsappUrl: "",
+    instagramUrl: "",
   });
 
   const companyValidators = {
@@ -302,6 +305,9 @@ export default function AdminPage() {
           addresses: data.data.addresses.length
             ? data.data.addresses
             : [{ address: "", mapsUrl: "" }],
+          facebookUrl: data.data.facebookUrl || "",
+          whatsappUrl: data.data.whatsappUrl || "",
+          instagramUrl: data.data.instagramUrl || "",
         });
       } else {
         showError(data.error || "Error al obtener la configuración");
@@ -384,6 +390,9 @@ export default function AdminPage() {
           dollarPriceBs: companyForm.dollarPriceBs,
           phones,
           addresses,
+          facebookUrl: companyForm.facebookUrl,
+          whatsappUrl: companyForm.whatsappUrl,
+          instagramUrl: companyForm.instagramUrl,
         }),
       });
 
@@ -1597,6 +1606,34 @@ export default function AdminPage() {
                 >
                   + Agregar dirección
                 </button>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold text-sm mb-2 text-label">Redes Sociales</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    label="Link de Facebook"
+                    value={companyForm.facebookUrl}
+                    onChange={(facebookUrl) =>
+                      setCompanyForm((prev) => ({ ...prev, facebookUrl }))
+                    }
+                  />
+                  <Input
+                    label="Link de WhatsApp"
+                    value={companyForm.whatsappUrl}
+                    helperText="Ej: https://wa.me/59112345678"
+                    onChange={(whatsappUrl) =>
+                      setCompanyForm((prev) => ({ ...prev, whatsappUrl }))
+                    }
+                  />
+                  <Input
+                    label="Link de Instagram"
+                    value={companyForm.instagramUrl}
+                    onChange={(instagramUrl) =>
+                      setCompanyForm((prev) => ({ ...prev, instagramUrl }))
+                    }
+                  />
+                </div>
               </div>
 
               <Button onClick={handleUpdateCompany} disabled={companyLoading}>

@@ -18,7 +18,9 @@ export function Footer() {
   const description = company?.description?.trim() || COMPANY_DESCRIPTION;
   const addresses = company?.addresses ?? [];
   const phones = company?.phones ?? [];
-  const whatsappLink = buildWhatsAppLink(phones[0] ?? "");
+  const facebookUrl = company?.facebookUrl?.trim() || SOCIAL_LINKS.facebook;
+  const instagramUrl = company?.instagramUrl?.trim() || SOCIAL_LINKS.instagram;
+  const whatsappLink = company?.whatsappUrl?.trim() || buildWhatsAppLink(phones[0] ?? "");
 
   return (
     <footer className="bg-gray-900 text-white mt-16">
@@ -29,7 +31,7 @@ export function Footer() {
             <p className="text-gray-400 text-sm">{description}</p>
             <div className="flex gap-3 mt-4">
               <a
-                href={SOCIAL_LINKS.facebook}
+                href={facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -47,7 +49,7 @@ export function Footer() {
                 <WhatsAppIcon size={18} />
               </a>
               <a
-                href={SOCIAL_LINKS.instagram}
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"

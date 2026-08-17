@@ -13,6 +13,9 @@ export class CompanyService {
     dollarPriceBs?: string | number;
     phones?: string[];
     addresses?: CompanyAddress[];
+    facebookUrl?: string;
+    whatsappUrl?: string;
+    instagramUrl?: string;
   }) {
     const existing = await this.getCompany();
     if (!existing) {
@@ -69,6 +72,10 @@ export class CompanyService {
       }
       updateData.addresses = addresses;
     }
+
+    if (data.facebookUrl !== undefined) updateData.facebookUrl = data.facebookUrl.trim();
+    if (data.whatsappUrl !== undefined) updateData.whatsappUrl = data.whatsappUrl.trim();
+    if (data.instagramUrl !== undefined) updateData.instagramUrl = data.instagramUrl.trim();
 
     const result = await companyRepository.update(existing.id, updateData);
     return result[0] || null;

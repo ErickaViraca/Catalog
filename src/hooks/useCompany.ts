@@ -14,9 +14,12 @@ export interface CompanyData {
   dollarPriceBs: string;
   phones: string[];
   addresses: CompanyAddress[];
+  facebookUrl: string;
+  whatsappUrl: string;
+  instagramUrl: string;
 }
 
-// Datos de empresa editables desde /admin > Configuración (nombre, cotización
+// Datos de empresa editables desde /adminMiTiendaSmart26 > Configuración (nombre, cotización
 // del dólar, teléfonos, direcciones). null mientras carga o si falla el fetch
 // — cada consumidor decide su propio fallback para ese caso.
 export function useCompany() {
