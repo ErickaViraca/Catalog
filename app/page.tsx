@@ -1,28 +1,35 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { ProductCard } from "@/components/products/ProductCard";
 import { mockProducts, mockCategories, mockBanners } from "@/data/mock";
+import { useCompany } from "@/src/hooks/useCompany";
 
 export default function Home() {
+  const company = useCompany();
+  const companyName = company?.name ?? "MiTiendaXiaomi";
   const featuredProducts = mockProducts.slice(0, 6);
   const banner = mockBanners[0];
+  const customHeroImage = company?.heroBannerUrl?.trim();
+  const heroImage = customHeroImage || banner?.image;
 
   return (
     <div className="flex flex-col">
       {/* Hero Banner */}
       <div className="relative h-96 bg-gradient-to-r from-blue-600 to-blue-800 overflow-hidden">
-        {banner && (
+        {heroImage && (
           <Image
-            src={banner.image}
-            alt={banner.title}
+            src={heroImage}
+            alt={customHeroImage ? companyName : (banner?.title ?? companyName)}
             fill
             className="object-cover opacity-30"
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white z-10">
-            <h1 className="text-5xl font-bold mb-4">Bienvenido a MiTiendaXiaomi</h1>
+            <h1 className="text-5xl font-bold mb-4">Bienvenido a {companyName}</h1>
             <p className="text-xl mb-8 text-gray-100">
               Descubre los mejores accesorios tecnológicos a precios inigualables
             </p>
