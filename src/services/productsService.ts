@@ -101,7 +101,7 @@ export class ProductService {
 
   async createProduct(data: {
     name: string;
-    code: string;
+    code?: string;
     slug: string;
     description: string;
     price: string | number;
@@ -119,16 +119,14 @@ export class ProductService {
       throw new Error("El nombre del producto es requerido");
     }
 
-    if (!data.code || data.code.trim().length === 0) {
-      throw new Error("El código de fabricante es requerido");
-    }
+    if (data.code && data.code.trim().length > 0) {
+      if (data.code.trim().length > 50) {
+        throw new Error("El código de fabricante no puede superar los 50 caracteres");
+      }
 
-    if (data.code.trim().length > 50) {
-      throw new Error("El código de fabricante no puede superar los 50 caracteres");
-    }
-
-    if (!/^[a-zA-Z0-9-]+$/.test(data.code.trim())) {
-      throw new Error("El código de fabricante solo puede tener letras, números y guiones");
+      if (!/^[a-zA-Z0-9-]+$/.test(data.code.trim())) {
+        throw new Error("El código de fabricante solo puede tener letras, números y guiones");
+      }
     }
 
     if (!data.slug || data.slug.trim().length === 0) {
@@ -190,7 +188,7 @@ export class ProductService {
 
     const result = await productRepository.create({
       name: data.name.trim(),
-      code: data.code.trim(),
+      code: data.code?.trim() || null,
       slug: data.slug.trim().toLowerCase(),
       description: data.description.trim(),
       price: price.toFixed(2),

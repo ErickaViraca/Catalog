@@ -475,7 +475,6 @@ export default function AdminPage() {
   const productValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
     code: combine(
-      required("El código de fabricante"),
       maxLength(50, "El código de fabricante"),
       alphanumericFormat("El código de fabricante")
     ),
@@ -825,7 +824,7 @@ export default function AdminPage() {
     setEditingProduct(product);
     setEditProductForm({
       name: product.name,
-      code: product.code,
+      code: product.code || "",
       slug: product.slug,
       description: product.description,
       price: Number(product.price),
@@ -1174,12 +1173,11 @@ export default function AdminPage() {
               />
               <Input
                 label="Código de Fabricante"
-                required
                 value={newProduct.code}
                 validate={productValidators.code}
                 forceTouched={productSubmitAttempted}
                 maxLength={50}
-                helperText="Código del fabricante, máx 50 caracteres"
+                helperText="Opcional, máx 50 caracteres"
                 onChange={(code) => setNewProduct({ ...newProduct, code })}
               />
               <Input
@@ -1856,12 +1854,11 @@ export default function AdminPage() {
           />
           <Input
             label="Código de Fabricante"
-            required
             value={editProductForm.code}
             validate={productValidators.code}
             forceTouched={editProductSubmitAttempted}
             maxLength={50}
-            helperText="Código del fabricante, máx 50 caracteres"
+            helperText="Opcional, máx 50 caracteres"
             onChange={(code) => setEditProductForm((prev) => ({ ...prev, code }))}
           />
           <Input
