@@ -16,6 +16,7 @@ export class CompanyService {
     facebookUrl?: string;
     whatsappUrl?: string;
     instagramUrl?: string;
+    heroBannerUrl?: string;
   }) {
     const existing = await this.getCompany();
     if (!existing) {
@@ -76,6 +77,7 @@ export class CompanyService {
     if (data.facebookUrl !== undefined) updateData.facebookUrl = data.facebookUrl.trim();
     if (data.whatsappUrl !== undefined) updateData.whatsappUrl = data.whatsappUrl.trim();
     if (data.instagramUrl !== undefined) updateData.instagramUrl = data.instagramUrl.trim();
+    if (data.heroBannerUrl !== undefined) updateData.heroBannerUrl = data.heroBannerUrl.trim();
 
     const result = await companyRepository.update(existing.id, updateData);
     return result[0] || null;

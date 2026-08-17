@@ -17,6 +17,7 @@ export interface CompanyData {
   facebookUrl: string;
   whatsappUrl: string;
   instagramUrl: string;
+  heroBannerUrl: string;
 }
 
 // Datos de empresa editables desde /adminMiTiendaSmart26 > Configuración (nombre, cotización

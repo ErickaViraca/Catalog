@@ -48,6 +48,7 @@ export async function PATCH(request: NextRequest) {
       facebookUrl: body.facebookUrl,
       whatsappUrl: body.whatsappUrl,
       instagramUrl: body.instagramUrl,
+      heroBannerUrl: body.heroBannerUrl,
     });
 
     return NextResponse.json({

@@ -267,6 +267,7 @@ export default function AdminPage() {
 
   const [companyLoading, setCompanyLoading] = useState(false);
   const [companySubmitAttempted, setCompanySubmitAttempted] = useState(false);
+  const [heroBannerUploading, setHeroBannerUploading] = useState(false);
   const [companyForm, setCompanyForm] = useState({
     name: "",
     description: "",
@@ -276,6 +277,7 @@ export default function AdminPage() {
     facebookUrl: "",
     whatsappUrl: "",
     instagramUrl: "",
+    heroBannerUrl: "",
   });
 
   const companyValidators = {
@@ -308,6 +310,7 @@ export default function AdminPage() {
           facebookUrl: data.data.facebookUrl || "",
           whatsappUrl: data.data.whatsappUrl || "",
           instagramUrl: data.data.instagramUrl || "",
+          heroBannerUrl: data.data.heroBannerUrl || "",
         });
       } else {
         showError(data.error || "Error al obtener la configuración");
@@ -393,6 +396,7 @@ export default function AdminPage() {
           facebookUrl: companyForm.facebookUrl,
           whatsappUrl: companyForm.whatsappUrl,
           instagramUrl: companyForm.instagramUrl,
+          heroBannerUrl: companyForm.heroBannerUrl,
         }),
       });
 
@@ -409,6 +413,36 @@ export default function AdminPage() {
     } finally {
       setCompanyLoading(false);
       setCompanySubmitAttempted(false);
+    }
+  };
+
+  const handleHeroBannerUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setHeroBannerUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "banners");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setCompanyForm((prev) => ({ ...prev, heroBannerUrl: data.data.url }));
+      } else {
+        showError(data.error || "Error al subir la imagen");
+      }
+    } catch (err) {
+      showError("Error al subir la imagen");
+      console.error(err);
+    } finally {
+      setHeroBannerUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -1634,6 +1668,18 @@ export default function AdminPage() {
                     }
                   />
                 </div>
+              </div>
+
+              <div className="mb-6">
+                <ImageUploader
+                  mode={companyForm.heroBannerUrl ? "edit" : "create"}
+                  shape="rectangle"
+                  label="Imagen de Banner (Inicio)"
+                  imageUrl={companyForm.heroBannerUrl}
+                  uploading={heroBannerUploading}
+                  onUpload={handleHeroBannerUpload}
+                  onRemove={() => setCompanyForm((prev) => ({ ...prev, heroBannerUrl: "" }))}
+                />
               </div>
 
               <Button onClick={handleUpdateCompany} disabled={companyLoading}>

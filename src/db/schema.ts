@@ -131,6 +131,8 @@ export const companies = pgTable("companies", {
   facebookUrl: text("facebook_url").notNull().default(""),
   whatsappUrl: text("whatsapp_url").notNull().default(""),
   instagramUrl: text("instagram_url").notNull().default(""),
+  // URL en R2 (carpeta "banners") de la imagen de fondo del hero de Inicio.
+  heroBannerUrl: text("hero_banner_url").notNull().default(""),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

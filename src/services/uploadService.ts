@@ -9,7 +9,8 @@ export class UploadService {
   async uploadImage(
     file: Buffer,
     originalName: string,
-    contentType: string
+    contentType: string,
+    folder: string = "products"
   ): Promise<string> {
     if (!ALLOWED_MIME_TYPES.includes(contentType)) {
       throw new Error("Tipo de archivo no permitido. Usa JPG, PNG, WEBP o AVIF");
@@ -20,7 +21,7 @@ export class UploadService {
     }
 
     const extension = originalName.split(".").pop()?.toLowerCase() || "jpg";
-    const key = `products/${Date.now()}-${randomSlugSuffix(10)}.${extension}`;
+    const key = `${folder}/${Date.now()}-${randomSlugSuffix(10)}.${extension}`;
 
     await r2Client.send(
       new PutObjectCommand({
