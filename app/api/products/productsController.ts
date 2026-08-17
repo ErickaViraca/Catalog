@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
       slug: body.slug,
       description: body.description,
       price: body.price,
+      priceBs: body.priceBs,
       stock: body.stock,
       sku: body.sku,
       categoryId: body.categoryId,

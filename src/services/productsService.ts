@@ -2,9 +2,18 @@ import { productRepository } from "../repository/productsRepository";
 import { categoryRepository } from "../repository/categoriesRepository";
 import { brandRepository } from "../repository/brandsRepository";
 import { productImageRepository } from "../repository/productImagesRepository";
+import { companyRepository } from "../repository/companyRepository";
 import { NewProduct } from "../db/schema";
 
 export class ProductService {
+  // price * companies.dollar_price_bs — companies es una fila única sembrada
+  // por migración, pero por las dudas si faltara, no bloquea el guardado.
+  private async computePriceBs(price: number): Promise<string> {
+    const company = await companyRepository.get();
+    const rate = company[0] ? Number(company[0].dollarPriceBs) : 1;
+    return (price * rate).toFixed(2);
+  }
+
   async getAllProducts(includeInactive = false) {
     const items = await productRepository.findAll(includeInactive);
     const primaryImages = await productImageRepository.findPrimaryByProductIds(
@@ -96,6 +105,7 @@ export class ProductService {
     slug: string;
     description: string;
     price: string | number;
+    priceBs?: string | number;
     stock?: number;
     sku: string;
     categoryId: string;
@@ -132,6 +142,14 @@ export class ProductService {
     const price = Number(data.price);
     if (!data.price || isNaN(price) || price < 0) {
       throw new Error("El precio debe ser un número válido mayor o igual a 0");
+    }
+
+    let priceBs: number | undefined;
+    if (data.priceBs !== undefined) {
+      priceBs = Number(data.priceBs);
+      if (isNaN(priceBs) || priceBs < 0) {
+        throw new Error("El precio en Bs debe ser un número válido mayor o igual a 0");
+      }
     }
 
     if (!data.sku || data.sku.trim().length === 0) {
@@ -176,6 +194,7 @@ export class ProductService {
       slug: data.slug.trim().toLowerCase(),
       description: data.description.trim(),
       price: price.toFixed(2),
+      priceBs: priceBs !== undefined ? priceBs.toFixed(2) : await this.computePriceBs(price),
       stock: data.stock ?? 0,
       sku: data.sku.trim(),
       categoryId: data.categoryId,
@@ -208,6 +227,7 @@ export class ProductService {
       slug: string;
       description: string;
       price: string | number;
+      priceBs: string | number;
       stock: number;
       sku: string;
       categoryId: string;
@@ -274,6 +294,16 @@ export class ProductService {
         throw new Error("El precio debe ser un número válido mayor o igual a 0");
       }
       updateData.price = price.toFixed(2);
+    }
+    if (data.priceBs !== undefined) {
+      const priceBs = Number(data.priceBs);
+      if (isNaN(priceBs) || priceBs < 0) {
+        throw new Error("El precio en Bs debe ser un número válido mayor o igual a 0");
+      }
+      updateData.priceBs = priceBs.toFixed(2);
+    } else if (updateData.price !== undefined) {
+      // El usuario cambió el precio en USD sin tocar el de Bs: recalcular.
+      updateData.priceBs = await this.computePriceBs(Number(updateData.price));
     }
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.sku) updateData.sku = data.sku.trim();

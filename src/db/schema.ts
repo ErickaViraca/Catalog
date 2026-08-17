@@ -64,6 +64,9 @@ export const products = pgTable(
     slug: text("slug").notNull().unique(),
     description: text("description").notNull(),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+    // price * companies.dollar_price_bs — se recalcula en el service al
+    // crear/editar el producto, pero es editable a mano desde el form.
+    priceBs: decimal("price_bs", { precision: 10, scale: 2 }).notNull().default("0"),
     stock: integer("stock").notNull().default(0),
     sku: text("sku").notNull().unique(), // Código único
     categoryId: uuid("category_id").notNull(),
