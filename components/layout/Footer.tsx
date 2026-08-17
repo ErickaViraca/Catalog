@@ -99,10 +99,6 @@ export function Footer() {
               ))}
               {phones.map((phone, index) => (
                 <li key={`phone-${index}`} className="flex items-center gap-2">
-                  <PhoneIcon size={16} className="shrink-0 text-gray-500" />
-                  <a href={`tel:${phone.replace(/\s+/g, "")}`} className="hover:text-white">
-                    {phone}
-                  </a>
                   <a
                     href={buildWhatsAppLink(phone)}
                     target="_blank"
@@ -113,6 +109,7 @@ export function Footer() {
                   >
                     <WhatsAppIcon size={16} />
                   </a>
+                  <a> {phone} </a>
                 </li>
               ))}
               <li className="flex items-center gap-2">
@@ -127,7 +124,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
           <p>
-            &copy; 2026 {companyName}. Todos los derechos reservados. | Hecho con Next.js
+            &copy; 2026 {companyName}. Todos los derechos reservados. | Oxman Ltda
           </p>
         </div>
       </div>
