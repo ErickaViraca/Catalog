@@ -92,7 +92,7 @@ export function ProductDetailView({
           <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
             Precio
           </p>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-3xl font-bold text-price">
             ${product.price.toFixed(2)}
           </p>
         </div>

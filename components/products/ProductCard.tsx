@@ -47,7 +47,7 @@ export function ProductCard({ product, hideAddToCart = false }: ProductCardProps
 
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-lg font-bold text-blue-600">
+              <span className="text-lg font-bold text-price">
                 ${product.price.toFixed(2)}
               </span>
               <span className="text-xs text-gray-500">

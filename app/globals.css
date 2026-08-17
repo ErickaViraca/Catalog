@@ -30,6 +30,10 @@
   --color-border: #d1d5db;
   --color-label: #374151;
   --color-muted: #6b7280;
+
+  /* Precio de producto (cards de catálogo/inicio, detalle de producto) —
+     un solo lugar para no repetir el mismo valor en cada componente. */
+  --color-price: lab(53 38.01 66.94);
 }
 
 @media (prefers-color-scheme: dark) {
