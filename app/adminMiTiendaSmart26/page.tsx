@@ -452,6 +452,7 @@ export default function AdminPage() {
     slug: "",
     description: "",
     price: 0,
+    priceBs: 0,
     stock: 0,
     sku: "",
     categoryId: categories[0]?.id || "",
@@ -461,6 +462,15 @@ export default function AdminPage() {
     isNew: true,
     imageUrl: "",
   });
+  // Si el usuario edita el precio en Bs a mano, dejamos de pisarlo cada vez
+  // que cambia el precio en USD (que sí se recalcula automáticamente).
+  const [productPriceBsTouched, setProductPriceBsTouched] = useState(false);
+  const [editProductPriceBsTouched, setEditProductPriceBsTouched] = useState(false);
+
+  const calcPriceBs = (price: number) => {
+    const rate = Number(companyForm.dollarPriceBs) || 0;
+    return Math.round(price * rate * 100) / 100;
+  };
 
   const productValidators = {
     name: combine(required("El nombre"), minLength(2, "El nombre")),
@@ -474,6 +484,13 @@ export default function AdminPage() {
       const num = Number(value);
       if (!value || Number.isNaN(num) || num <= 0) {
         return "El precio debe ser mayor a 0";
+      }
+      return null;
+    },
+    priceBs: (value: unknown) => {
+      const num = Number(value);
+      if (!value || Number.isNaN(num) || num <= 0) {
+        return "El precio en Bs debe ser mayor a 0";
       }
       return null;
     },
@@ -502,6 +519,7 @@ export default function AdminPage() {
     slug: "",
     description: "",
     price: 0,
+    priceBs: 0,
     stock: 0,
     sku: "",
     categoryId: "",
@@ -781,6 +799,7 @@ export default function AdminPage() {
         slug: "",
         description: "",
         price: 0,
+        priceBs: 0,
         stock: 0,
         sku: "",
         categoryId: categories[0]?.id || "",
@@ -790,6 +809,7 @@ export default function AdminPage() {
         isNew: true,
         imageUrl: "",
       });
+      setProductPriceBsTouched(false);
       setProductSlugTouched(false);
       setProductSubmitAttempted(false);
       setProductSlugSuffix(randomSlugSuffix());
@@ -809,6 +829,7 @@ export default function AdminPage() {
       slug: product.slug,
       description: product.description,
       price: Number(product.price),
+      priceBs: Number(product.priceBs),
       stock: product.stock,
       sku: product.sku,
       categoryId: product.categoryId,
@@ -818,6 +839,7 @@ export default function AdminPage() {
       isNew: product.isNew,
       imageUrl: product.imageUrl || "",
     });
+    setEditProductPriceBsTouched(false);
     setEditProductSubmitAttempted(false);
   };
 
@@ -1171,18 +1193,6 @@ export default function AdminPage() {
                 onChange={(sku) => setNewProduct({ ...newProduct, sku })}
               />
               <Input
-                label="Precio"
-                required
-                type="number"
-                value={newProduct.price}
-                validate={productValidators.price}
-                forceTouched={productSubmitAttempted}
-                helperText="En USD, ej: 89.99"
-                onChange={(value) =>
-                  setNewProduct({ ...newProduct, price: parseFloat(value) || 0 })
-                }
-              />
-              <Input
                 label="Stock"
                 type="number"
                 value={newProduct.stock}
@@ -1224,6 +1234,39 @@ export default function AdminPage() {
                   </option>
                 ))}
               </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <Input
+                label="Precio"
+                required
+                type="number"
+                value={newProduct.price}
+                validate={productValidators.price}
+                forceTouched={productSubmitAttempted}
+                helperText="En USD, ej: 89.99"
+                onChange={(value) => {
+                  const price = parseFloat(value) || 0;
+                  setNewProduct((prev) => ({
+                    ...prev,
+                    price,
+                    priceBs: productPriceBsTouched ? prev.priceBs : calcPriceBs(price),
+                  }));
+                }}
+              />
+              <Input
+                label="Precio en Bs"
+                required
+                type="number"
+                value={newProduct.priceBs}
+                validate={productValidators.priceBs}
+                forceTouched={productSubmitAttempted}
+                helperText="Se autocalcula con el precio en USD, pero es editable"
+                onChange={(value) => {
+                  setProductPriceBsTouched(true);
+                  setNewProduct((prev) => ({ ...prev, priceBs: parseFloat(value) || 0 }));
+                }}
+              />
             </div>
 
             <div className="mb-4 flex flex-wrap gap-6">
@@ -1832,18 +1875,6 @@ export default function AdminPage() {
             onChange={(sku) => setEditProductForm((prev) => ({ ...prev, sku }))}
           />
           <Input
-            label="Precio"
-            required
-            type="number"
-            value={editProductForm.price}
-            validate={productValidators.price}
-            forceTouched={editProductSubmitAttempted}
-            helperText="En USD, ej: 89.99"
-            onChange={(value) =>
-              setEditProductForm((prev) => ({ ...prev, price: parseFloat(value) || 0 }))
-            }
-          />
-          <Input
             label="Stock"
             type="number"
             value={editProductForm.stock}
@@ -1885,6 +1916,39 @@ export default function AdminPage() {
               </option>
             ))}
           </Select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <Input
+            label="Precio"
+            required
+            type="number"
+            value={editProductForm.price}
+            validate={productValidators.price}
+            forceTouched={editProductSubmitAttempted}
+            helperText="En USD, ej: 89.99"
+            onChange={(value) => {
+              const price = parseFloat(value) || 0;
+              setEditProductForm((prev) => ({
+                ...prev,
+                price,
+                priceBs: editProductPriceBsTouched ? prev.priceBs : calcPriceBs(price),
+              }));
+            }}
+          />
+          <Input
+            label="Precio en Bs"
+            required
+            type="number"
+            value={editProductForm.priceBs}
+            validate={productValidators.priceBs}
+            forceTouched={editProductSubmitAttempted}
+            helperText="Se autocalcula con el precio en USD, pero es editable"
+            onChange={(value) => {
+              setEditProductPriceBsTouched(true);
+              setEditProductForm((prev) => ({ ...prev, priceBs: parseFloat(value) || 0 }));
+            }}
+          />
         </div>
 
         <div className="mb-4 flex flex-wrap gap-6">
