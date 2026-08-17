@@ -3,14 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
-import { ProductCard } from "@/components/products/ProductCard";
-import { mockProducts, mockCategories, mockBanners } from "@/data/mock";
+import { NewProductsCarousel } from "@/components/products/NewProductsCarousel";
+import { mockProducts, mockBanners } from "@/data/mock";
 import { useCompany } from "@/src/hooks/useCompany";
 
 export default function Home() {
   const company = useCompany();
   const companyName = company?.name ?? "MiTiendaXiaomi";
-  const featuredProducts = mockProducts.slice(0, 6);
+  const newProducts = mockProducts.slice(0, 10);
   const banner = mockBanners[0];
   const customHeroImage = company?.heroBannerUrl?.trim();
   const heroImage = customHeroImage || banner?.image;
@@ -40,41 +40,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Featured Categories */}
+      {/* Productos Nuevos */}
       <section className="max-w-7xl mx-auto px-4 py-16 w-full">
-        <h2 className="text-3xl font-bold mb-12">Categorías Destacadas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {mockCategories.map((category) => (
-            <Link key={category.id} href={`/shop?category=${category.slug}`}>
-              <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="relative h-48 bg-gray-200">
-                  {category.image && (
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      fill
-                      className="object-cover"
-                    />
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="text-xl font-bold">{category.name}</h3>
-                  <p className="text-gray-600 text-sm mt-2">Explorar →</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 py-16 w-full">
-        <h2 className="text-3xl font-bold mb-12">Productos Destacados</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <h2 className="text-3xl font-bold mb-12">Productos Nuevos</h2>
+        <NewProductsCarousel products={newProducts} />
         <div className="text-center mt-12">
           <Link href="/shop">
             <Button variant="outline" size="lg">
