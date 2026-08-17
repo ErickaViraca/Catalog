@@ -6,6 +6,14 @@ import { categoryRepository } from "../../src/repository/categoriesRepository";
 import { pickField } from "./excel";
 import type { ImportResult } from "./brands";
 
+// Columnas booleanas del Excel: 1 = true, 0 = false. Celda vacía -> undefined
+// (el service aplica su propio default: active/is_new true, featured false).
+function parseBooleanFlag(raw: string): boolean | undefined {
+  const trimmed = raw.trim();
+  if (trimmed === "") return undefined;
+  return trimmed === "1";
+}
+
 // Igual que en el admin: primeras 2 palabras del nombre + sufijo aleatorio,
 // reintentando el sufijo si por mala suerte colisiona con uno existente.
 async function uniqueProductSlug(
@@ -40,10 +48,13 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Im
     const sku = pickField(row, ["codigo_inventario", "sku"]);
     const description = pickField(row, ["descripcion", "description"]);
     const price = pickField(row, ["precio", "price"]);
+    const priceBsRaw = pickField(row, ["precio_bs", "preciobs", "price_bs", "pricebs"]);
     const stockRaw = pickField(row, ["stock", "cantidad"]);
     const brandName = pickField(row, ["marca", "brand"]);
     const categoryName = pickField(row, ["categoria", "category"]);
-    const featuredRaw = pickField(row, ["destacado", "featured"]).toLowerCase();
+    const featuredRaw = pickField(row, ["destacado", "featured"]);
+    const isNewRaw = pickField(row, ["nuevo", "es_nuevo", "is_new", "isnew"]);
+    const activeRaw = pickField(row, ["activo", "active"]);
 
     if (!name) {
       result.skipped.push({ row: rowNumber, reason: "Falta el nombre" });
@@ -75,15 +86,18 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Im
 
       await productService.createProduct({
         name,
-        code,
+        code: code || undefined,
         slug,
         description,
         price,
+        priceBs: priceBsRaw || undefined,
         stock: stockRaw ? Number(stockRaw) : 0,
         sku,
         categoryId,
         brandId,
-        featured: ["true", "1", "si", "sí"].includes(featuredRaw),
+        active: parseBooleanFlag(activeRaw),
+        featured: parseBooleanFlag(featuredRaw),
+        isNew: parseBooleanFlag(isNewRaw),
       });
       result.created++;
     } catch (error) {
