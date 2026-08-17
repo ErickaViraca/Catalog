@@ -961,12 +961,14 @@ export default function AdminPage() {
     () =>
       sortRows(products, productSort, {
         name: (p) => (p.name ?? "").toLowerCase(),
+        code: (p) => (p.sku ?? "").toLowerCase(),
         price: (p) => Number(p.price) || 0,
         stock: (p) => Number(p.stock) || 0,
         category: (p) =>
           (categories.find((c) => c.id === p.categoryId)?.name ?? "").toLowerCase(),
+        brand: (p) => (brands.find((b) => b.id === p.brandId)?.name ?? "").toLowerCase(),
       }),
-    [products, productSort, categories]
+    [products, productSort, categories, brands]
   );
 
   return (
@@ -1294,6 +1296,12 @@ export default function AdminPage() {
                       onSort={handleProductSort}
                     />
                     <SortableHeader
+                      label="Código"
+                      sortKey="code"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
+                    <SortableHeader
                       label="Precio"
                       sortKey="price"
                       currentSort={productSort}
@@ -1308,6 +1316,12 @@ export default function AdminPage() {
                     <SortableHeader
                       label="Categoría"
                       sortKey="category"
+                      currentSort={productSort}
+                      onSort={handleProductSort}
+                    />
+                    <SortableHeader
+                      label="Marca"
+                      sortKey="brand"
                       currentSort={productSort}
                       onSort={handleProductSort}
                     />
@@ -1331,10 +1345,14 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">{product.name}</td>
+                      <td className="px-6 py-4">{product.sku}</td>
                       <td className="px-6 py-4">${Number(product.price).toFixed(2)}</td>
                       <td className="px-6 py-4">{product.stock}</td>
                       <td className="px-6 py-4">
                         {categories.find((c) => c.id === product.categoryId)?.name}
+                      </td>
+                      <td className="px-6 py-4">
+                        {brands.find((b) => b.id === product.brandId)?.name}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
