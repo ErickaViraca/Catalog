@@ -35,12 +35,6 @@ export function Navbar() {
             >
               Catálogo
             </Link>
-            <Link
-              href="/admin"
-              className={`${isActive("/admin") ? "text-blue-400" : "hover:text-gray-300"} transition-colors`}
-            >
-              Admin
-            </Link>
           </div>
         </div>
       </div>

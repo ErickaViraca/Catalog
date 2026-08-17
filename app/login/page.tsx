@@ -10,7 +10,7 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
   if (session) {
-    redirect("/admin");
+    redirect("/adminMiTiendaSmart26");
   }
 
   const { error, callbackUrl } = await searchParams;
@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: callbackUrl || "/admin" });
+            await signIn("google", { redirectTo: callbackUrl || "/adminMiTiendaSmart26" });
           }}
         >
           <Button type="submit" size="lg" className="w-full">

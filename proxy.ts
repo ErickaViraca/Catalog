@@ -11,7 +11,9 @@ export default auth((request) => {
 
   // Páginas del admin: sin sesión -> redirect al login,
   // recordando a dónde quería ir para volver después de loguearse.
-  if (pathname.startsWith("/admin") && !isLoggedIn) {
+  // La ruta no está linkeada en la UI a propósito (ver Navbar) — solo
+  // accesible conociendo la URL exacta.
+  if (pathname.startsWith("/adminMiTiendaSmart26") && !isLoggedIn) {
     const loginUrl = new URL("/login", request.nextUrl);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
@@ -35,7 +37,7 @@ export default auth((request) => {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
+    "/adminMiTiendaSmart26/:path*",
     "/api/brands/:path*",
     "/api/categories/:path*",
     "/api/products/:path*",

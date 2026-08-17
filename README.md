@@ -60,7 +60,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Home** (`/`): Landing page with featured products
 - **Shop** (`/shop`): Product catalog with filters
 - **Product Details** (`/products/[slug]`): Individual product page
-- **Admin** (`/admin`): Management panel for products, categories, banners
+- **Admin** (`/adminMiTiendaSmart26`): Management panel for products, categories, banners — not linked from the UI, URL-only access
 
 ## 🗄️ Database Schema
 
