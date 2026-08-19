@@ -998,7 +998,12 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-4 mb-8 border-b">
-        {(["brands", "products", "categories", "banners", "config"] as Tab[]).map((tab) => (
+        {(
+          // Tab "banners" oculto por ahora — todavía no le damos uso. La
+          // sección sigue implementada más abajo, solo no es alcanzable
+          // desde acá.
+          ["brands", "products", "categories", "config"] as Tab[]
+        ).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
