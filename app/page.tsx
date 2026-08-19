@@ -18,15 +18,17 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Banner */}
-      <div className="relative h-96 bg-gradient-to-r from-blue-600 to-blue-800 overflow-hidden">
+      <div className="relative h-96 bg-gray-900 overflow-hidden">
         {heroImage && (
           <Image
             src={heroImage}
             alt={customHeroImage ? companyName : (banner?.title ?? companyName)}
             fill
-            className="object-cover opacity-30"
+            className="object-cover"
           />
         )}
+        {/* Scrim neutro (no azul) para que el texto sea legible sobre cualquier banner */}
+        <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white z-10">
             <h1 className="text-5xl font-bold mb-4">Bienvenido a {companyName}</h1>
