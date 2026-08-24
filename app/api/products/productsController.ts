@@ -55,17 +55,21 @@ export async function GET(request: NextRequest) {
     const search = url.searchParams.get("search");
     const page = url.searchParams.get("page");
     const sort = url.searchParams.get("sort");
+    const isNewParam = url.searchParams.get("isNew");
+    const limitParam = url.searchParams.get("limit");
 
     // Catálogo público (/shop): filtros + paginación. Sin estos params,
     // se mantiene el comportamiento anterior (todos los productos) —
     // el admin panel sigue dependiendo de eso para listar sin recortar.
-    if (categoryIdsParam || brandIdsParam || search || page || sort) {
+    if (categoryIdsParam || brandIdsParam || search || page || sort || isNewParam) {
       const result = await productService.getFilteredProducts({
         categoryIds: categoryIdsParam ? categoryIdsParam.split(",").filter(Boolean) : undefined,
         brandIds: brandIdsParam ? brandIdsParam.split(",").filter(Boolean) : undefined,
         search: search || undefined,
+        isNew: isNewParam === "true" ? true : undefined,
         sort: (sort as "name" | "price-asc" | "price-desc" | null) || undefined,
         page: page ? Number(page) : undefined,
+        limit: limitParam ? Number(limitParam) : undefined,
       });
 
       return NextResponse.json({

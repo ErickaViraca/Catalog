@@ -40,7 +40,11 @@ export class ProductService {
 
   async getProductBySlug(slug: string) {
     const result = await productRepository.findBySlug(slug);
-    return result[0] || null;
+    const product = result[0];
+    if (!product) return null;
+
+    const primaryImages = await productImageRepository.findPrimaryByProductIds([product.id]);
+    return { ...product, imageUrl: primaryImages[0]?.imageUrl || null };
   }
 
   async getProductsByCategory(categoryId: string) {
@@ -57,6 +61,7 @@ export class ProductService {
     categoryIds?: string[];
     brandIds?: string[];
     search?: string;
+    isNew?: boolean;
     sort?: "name" | "price-asc" | "price-desc";
     page?: number;
     limit?: number;
@@ -75,6 +80,7 @@ export class ProductService {
       brandIds: options.brandIds,
       search: options.search,
       searchBrandIds,
+      isNew: options.isNew,
       sort: options.sort,
       page,
       limit,

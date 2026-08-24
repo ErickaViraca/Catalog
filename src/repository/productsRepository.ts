@@ -9,6 +9,7 @@ export interface ProductFilterOptions {
   // Marcas cuyo nombre matchea el término de búsqueda (resueltas en el
   // service) — un producto también entra si pertenece a alguna de estas.
   searchBrandIds?: string[];
+  isNew?: boolean;
   sort?: "name" | "price-asc" | "price-desc";
   page: number;
   limit: number;
@@ -74,6 +75,10 @@ export class ProductRepository {
 
     if (options.brandIds?.length) {
       conditions.push(inArray(products.brandId, options.brandIds));
+    }
+
+    if (options.isNew !== undefined) {
+      conditions.push(eq(products.isNew, options.isNew));
     }
 
     if (options.search) {
