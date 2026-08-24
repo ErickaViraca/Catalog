@@ -16,14 +16,22 @@ export interface ProductFilterOptions {
 }
 
 export class ProductRepository {
+  // Orden explícito (por nombre) — sin esto, Postgres no garantiza el
+  // orden de un SELECT sin ORDER BY, y un UPDATE puede reubicar la fila
+  // físicamente y hacer que "salte" de posición en la lista del admin.
   async findAll(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(products).where(eq(products.isDeleted, false));
+      return db
+        .select()
+        .from(products)
+        .where(eq(products.isDeleted, false))
+        .orderBy(asc(products.name));
     }
     return db
       .select()
       .from(products)
-      .where(and(eq(products.active, true), eq(products.isDeleted, false)));
+      .where(and(eq(products.active, true), eq(products.isDeleted, false)))
+      .orderBy(asc(products.name));
   }
 
   async findById(id: string) {

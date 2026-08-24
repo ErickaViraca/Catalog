@@ -1,16 +1,24 @@
-import { and, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, ilike } from "drizzle-orm";
 import { db } from "../db/client";
 import { brands, NewBrand } from "../db/schema";
 
 export class BrandRepository {
+  // Orden explícito (por nombre) — sin esto, Postgres no garantiza el
+  // orden de un SELECT sin ORDER BY, y un UPDATE puede reubicar la fila
+  // físicamente y hacer que "salte" de posición en la lista del admin.
   async findAll(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(brands).where(eq(brands.isDeleted, false));
+      return db
+        .select()
+        .from(brands)
+        .where(eq(brands.isDeleted, false))
+        .orderBy(asc(brands.name));
     }
     return db
       .select()
       .from(brands)
-      .where(and(eq(brands.active, true), eq(brands.isDeleted, false)));
+      .where(and(eq(brands.active, true), eq(brands.isDeleted, false)))
+      .orderBy(asc(brands.name));
   }
 
   // Usado por el buscador del catálogo: "buscar por producto o marca"

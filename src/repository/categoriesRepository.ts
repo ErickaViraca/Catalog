@@ -1,16 +1,24 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { categories, NewCategory } from "../db/schema";
 
 export class CategoryRepository {
+  // Orden explícito (por nombre) — sin esto, Postgres no garantiza el
+  // orden de un SELECT sin ORDER BY, y un UPDATE puede reubicar la fila
+  // físicamente y hacer que "salte" de posición en la lista del admin.
   async findAll(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(categories).where(eq(categories.isDeleted, false));
+      return db
+        .select()
+        .from(categories)
+        .where(eq(categories.isDeleted, false))
+        .orderBy(asc(categories.name));
     }
     return db
       .select()
       .from(categories)
-      .where(and(eq(categories.active, true), eq(categories.isDeleted, false)));
+      .where(and(eq(categories.active, true), eq(categories.isDeleted, false)))
+      .orderBy(asc(categories.name));
   }
 
   async findById(id: string) {
