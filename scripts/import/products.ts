@@ -55,6 +55,7 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Im
     const featuredRaw = pickField(row, ["destacado", "featured"]);
     const isNewRaw = pickField(row, ["nuevo", "es_nuevo", "is_new", "isnew"]);
     const activeRaw = pickField(row, ["activo", "active"]);
+    const imageUrl = pickField(row, ["imagen", "imagen_url", "url_imagen", "image", "image_url"]);
 
     if (!name) {
       result.skipped.push({ row: rowNumber, reason: "Falta el nombre" });
@@ -98,6 +99,7 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Im
         active: parseBooleanFlag(activeRaw),
         featured: parseBooleanFlag(featuredRaw),
         isNew: parseBooleanFlag(isNewRaw),
+        imageUrl: imageUrl || undefined,
       });
       result.created++;
     } catch (error) {
