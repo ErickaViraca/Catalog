@@ -3,5 +3,5 @@
 // "Bs.-" en cada componente que muestra un precio.
 export function formatBs(value: string | number): string {
   const amount = Number(value) || 0;
-  return `Bs.-${amount.toFixed(2)}`;
+  return `Bs.- ${amount.toFixed(2)}`;
 }
