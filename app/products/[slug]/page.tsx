@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { mockProducts, mockCategories, mockBrands } from "@/data/mock";
+import { productService } from "@/src/services/productsService";
+import { categoryRepository } from "@/src/repository/categoriesRepository";
+import { brandRepository } from "@/src/repository/brandsRepository";
 import { ProductDetailView } from "@/components/products/ProductDetailView";
 
 interface ProductPageProps {
@@ -9,16 +11,18 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = mockProducts.find((p) => p.slug === slug);
+  const product = await productService.getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const images: string[] =
-    typeof product.images === "string" ? JSON.parse(product.images) : product.images;
-  const brand = mockBrands.find((b) => b.id === product.brandId);
-  const category = mockCategories.find((c) => c.id === product.categoryId);
+  const [categoryResult, brandResult] = await Promise.all([
+    categoryRepository.findById(product.categoryId),
+    brandRepository.findById(product.brandId),
+  ]);
+  const category = categoryResult[0];
+  const brand = brandResult[0];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -37,7 +41,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <ProductDetailView
         product={product}
-        images={images}
+        imageUrl={product.imageUrl}
         brandName={brand?.name}
         categoryName={category?.name}
       />

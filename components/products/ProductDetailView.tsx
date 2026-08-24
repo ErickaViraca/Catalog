@@ -11,33 +11,34 @@ interface ProductDetailViewProps {
     id: string;
     name: string;
     description: string;
-    price: number;
+    price: string | number;
     stock: number;
   };
-  images: string[];
+  imageUrl: string | null;
   brandName?: string;
   categoryName?: string;
 }
 
+// Una sola imagen por producto por ahora (product_images solo guarda la
+// principal hoy) — cuando haya soporte real de galería, esto vuelve a
+// necesitar el selector de miniaturas que tenía antes.
 export function ProductDetailView({
   product,
-  images,
+  imageUrl,
   brandName,
   categoryName,
 }: ProductDetailViewProps) {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("description");
-
-  const currentImage = images[selectedImageIndex];
+  const price = Number(product.price);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
       {/* Gallery */}
       <div>
         <div className="relative w-full h-96 lg:h-[28rem] bg-gray-200 rounded-lg overflow-hidden mb-4">
-          {currentImage ? (
+          {imageUrl ? (
             <Image
-              src={currentImage}
+              src={imageUrl}
               alt={product.name}
               fill
               className="object-cover"
@@ -53,28 +54,6 @@ export function ProductDetailView({
             </div>
           )}
         </div>
-        {images.length > 1 && (
-          <div className="flex gap-2">
-            {images.map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedImageIndex(idx)}
-                className={`relative h-20 w-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                  idx === selectedImageIndex
-                    ? "border-blue-600"
-                    : "border-gray-300"
-                }`}
-              >
-                <Image
-                  src={img}
-                  alt={`${product.name} ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Info */}
@@ -93,7 +72,7 @@ export function ProductDetailView({
             Precio
           </p>
           <p className="text-3xl font-bold text-price">
-            ${product.price.toFixed(2)}
+            ${price.toFixed(2)}
           </p>
         </div>
 

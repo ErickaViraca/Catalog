@@ -1,21 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
 import { FilterCheckbox } from "@/components/products/FilterCheckbox";
-import { mockProducts, mockCategories, mockBrands } from "@/data/mock";
-
-// TODO: todavía no hay productos reales cargados en la DB, así que esta
-// página sigue usando los mocks (incluye brandId para poder probar el
-// filtro de marcas). Cuando haya datos reales, volver a fetch("/api/products")
-// con los mismos query params que ya soporta el backend (categoryIds,
-// brandIds, search, sort, page) — ver el commit de paginación para esa
-// versión.
-const PAGE_SIZE = 12;
+import { Product, Category, Brand } from "@/types";
 
 export default function ShopPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -25,7 +19,29 @@ export default function ShopPage() {
   );
   const [page, setPage] = useState(1);
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   const productsTopRef = useRef<HTMLDivElement>(null);
+
+  // Filtros del sidebar: se cargan una sola vez (solo categorías/marcas activas)
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCategories(data.data);
+      })
+      .catch((err) => console.error("Error al obtener categorías", err));
+
+    fetch("/api/brands")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setBrands(data.data);
+      })
+      .catch((err) => console.error("Error al obtener marcas", err));
+  }, []);
 
   // Debounce de la búsqueda: espera a que el usuario deje de escribir
   useEffect(() => {
@@ -36,44 +52,37 @@ export default function ShopPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const filteredProducts = useMemo(() => {
-    let filtered = mockProducts;
+  // Productos: un fetch a /api/products por cada combinación de filtros/orden/página
+  useEffect(() => {
+    let cancelled = false;
+    setProductsLoading(true);
 
-    if (selectedCategoryIds.length) {
-      filtered = filtered.filter((p) => selectedCategoryIds.includes(p.categoryId));
-    }
+    const params = new URLSearchParams();
+    if (selectedCategoryIds.length) params.set("categoryIds", selectedCategoryIds.join(","));
+    if (selectedBrandIds.length) params.set("brandIds", selectedBrandIds.join(","));
+    if (searchTerm) params.set("search", searchTerm);
+    params.set("sort", sortBy);
+    params.set("page", String(page));
 
-    if (selectedBrandIds.length) {
-      filtered = filtered.filter((p) => selectedBrandIds.includes(p.brandId));
-    }
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((p) => {
-        const brandName = mockBrands.find((b) => b.id === p.brandId)?.name.toLowerCase() ?? "";
-        return p.name.toLowerCase().includes(term) || brandName.includes(term);
+    fetch(`/api/products?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.success) {
+          setProducts(data.data);
+          setTotalProducts(data.count);
+          setTotalPages(data.totalPages);
+        }
+      })
+      .catch((err) => console.error("Error al obtener productos", err))
+      .finally(() => {
+        if (!cancelled) setProductsLoading(false);
       });
-    }
 
-    return [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "name":
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-  }, [selectedCategoryIds, selectedBrandIds, searchTerm, sortBy]);
-
-  const totalProducts = filteredProducts.length;
-  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
-  const products = useMemo(
-    () => filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filteredProducts, page]
-  );
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategoryIds, selectedBrandIds, searchTerm, sortBy, page]);
 
   const toggleCategory = (id: string) => {
     setSelectedCategoryIds((prev) =>
@@ -94,6 +103,7 @@ export default function ShopPage() {
     productsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const PAGE_SIZE = 12;
   const rangeStart = totalProducts === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * PAGE_SIZE, totalProducts);
 
@@ -121,7 +131,7 @@ export default function ShopPage() {
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Categorías</h3>
             <div className="scrollbar-minimal max-h-48 overflow-y-auto pr-1 space-y-2">
-              {mockCategories.map((cat) => (
+              {categories.map((cat) => (
                 <FilterCheckbox
                   key={cat.id}
                   label={cat.name}
@@ -136,7 +146,7 @@ export default function ShopPage() {
           <div className="mb-6">
             <h3 className="font-semibold text-sm mb-2">Marcas</h3>
             <div className="scrollbar-minimal max-h-48 overflow-y-auto pr-1 space-y-2">
-              {mockBrands.map((brand) => (
+              {brands.map((brand) => (
                 <FilterCheckbox
                   key={brand.id}
                   label={brand.name}
@@ -179,7 +189,11 @@ export default function ShopPage() {
             <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
           </div>
 
-          {products.length === 0 ? (
+          {productsLoading ? (
+            <div className="text-center py-12">
+              <p className="text-xl text-gray-600">Cargando productos...</p>
+            </div>
+          ) : products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-xl text-gray-600">No se encontraron productos</p>
               <Button

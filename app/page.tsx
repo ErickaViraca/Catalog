@@ -1,19 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { NewProductsCarousel } from "@/components/products/NewProductsCarousel";
-import { mockProducts, mockBanners } from "@/data/mock";
+import { mockBanners } from "@/data/mock";
 import { useCompany } from "@/src/hooks/useCompany";
+import { Product } from "@/types";
 
 export default function Home() {
   const company = useCompany();
   const companyName = company?.name ?? "MiTiendaXiaomi";
-  const newProducts = mockProducts.slice(0, 10);
+  const [newProducts, setNewProducts] = useState<Product[]>([]);
   const banner = mockBanners[0];
   const customHeroImage = company?.heroBannerUrl?.trim();
   const heroImage = customHeroImage || banner?.image;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/products?isNew=true&limit=10")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.success) setNewProducts(data.data);
+      })
+      .catch((err) => console.error("Error al obtener productos nuevos", err));
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="flex flex-col">
