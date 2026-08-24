@@ -12,17 +12,15 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, hideAddToCart = false }: ProductCardProps) {
-  const mainImage = typeof product.images === "string"
-    ? JSON.parse(product.images)[0]
-    : product.images[0];
+  const price = Number(product.price);
 
   return (
     <Link href={`/products/${product.slug}`}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
         <div className="relative w-full h-36 bg-gray-200">
-          {mainImage ? (
+          {product.imageUrl ? (
             <Image
-              src={mainImage}
+              src={product.imageUrl}
               alt={product.name}
               fill
               className="object-cover"
@@ -48,7 +46,7 @@ export function ProductCard({ product, hideAddToCart = false }: ProductCardProps
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-2">
               <span className="text-lg font-bold text-price">
-                ${product.price.toFixed(2)}
+                ${price.toFixed(2)}
               </span>
               <span className="text-xs text-gray-500">
                 {product.stock} en stock
