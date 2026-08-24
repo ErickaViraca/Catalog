@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
+import { formatBs } from "@/src/lib/formatPrice";
 
 type Tab = "description" | "specs";
 
@@ -11,7 +12,7 @@ interface ProductDetailViewProps {
     id: string;
     name: string;
     description: string;
-    price: string | number;
+    priceBs: string | number;
     stock: number;
   };
   imageUrl: string | null;
@@ -29,7 +30,6 @@ export function ProductDetailView({
   categoryName,
 }: ProductDetailViewProps) {
   const [activeTab, setActiveTab] = useState<Tab>("description");
-  const price = Number(product.price);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -72,7 +72,7 @@ export function ProductDetailView({
             Precio
           </p>
           <p className="text-3xl font-bold text-price">
-            ${price.toFixed(2)}
+            {formatBs(product.priceBs)}
           </p>
         </div>
 

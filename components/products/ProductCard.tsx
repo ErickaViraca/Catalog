@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Product } from "@/types";
 import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
+import { formatBs } from "@/src/lib/formatPrice";
 
 interface ProductCardProps {
   product: Product;
@@ -12,7 +13,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, hideAddToCart = false }: ProductCardProps) {
-  const price = Number(product.price);
 
   return (
     <Link href={`/products/${product.slug}`}>
@@ -46,7 +46,7 @@ export function ProductCard({ product, hideAddToCart = false }: ProductCardProps
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-2">
               <span className="text-lg font-bold text-price">
-                ${price.toFixed(2)}
+                {formatBs(product.priceBs)}
               </span>
               <span className="text-xs text-gray-500">
                 {product.stock} en stock
