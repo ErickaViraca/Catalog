@@ -7,6 +7,7 @@ import {
   decimal,
   uuid,
   uniqueIndex,
+  index,
   foreignKey,
   jsonb,
 } from "drizzle-orm/pg-core";
@@ -81,6 +82,15 @@ export const products = pgTable(
   (table) => ({
     slugIdx: uniqueIndex("products_slug_idx").on(table.slug),
     skuIdx: uniqueIndex("products_sku_idx").on(table.sku),
+    // Un foreignKey() no crea índice — sin esto, filtrar por categoría o
+    // marca (findByCategoryId, findByBrandId, findFiltered en /shop) hace
+    // un sequential scan de toda la tabla en cada request.
+    categoryIdIdx: index("products_category_id_idx").on(table.categoryId),
+    brandIdIdx: index("products_brand_id_idx").on(table.brandId),
+    // active/is_deleted están en el WHERE de prácticamente todas las
+    // queries de productos (findAll, findById, findFiltered, etc.).
+    activeIdx: index("products_active_idx").on(table.active),
+    isDeletedIdx: index("products_is_deleted_idx").on(table.isDeleted),
     categoryFk: foreignKey({
       columns: [table.categoryId],
       foreignColumns: [categories.id],
@@ -105,6 +115,11 @@ export const productImages = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => ({
+    // El más importante de los cuatro: findPrimaryByProductIds filtra por
+    // esta columna en cada carga de /products/[slug], en cada listado del
+    // catálogo y en el admin — sin índice, es sequential scan completo de
+    // product_images en cada una de esas requests.
+    productIdIdx: index("product_images_product_id_idx").on(table.productId),
     productFk: foreignKey({
       columns: [table.productId],
       foreignColumns: [products.id],
