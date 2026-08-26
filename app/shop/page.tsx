@@ -211,9 +211,9 @@ export default function ShopPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} hideAddToCart />
+                  <ProductCard key={product.id} product={product} hideAddToCart tall />
                 ))}
               </div>
 

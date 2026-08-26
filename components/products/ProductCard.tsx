@@ -10,14 +10,17 @@ import { formatBs } from "@/src/lib/formatPrice";
 interface ProductCardProps {
   product: Product;
   hideAddToCart?: boolean;
+  // Catálogo (/shop) usa una imagen más alta para darle más protagonismo
+  // al producto; el carrusel de Inicio mantiene la proporción original.
+  tall?: boolean;
 }
 
-export function ProductCard({ product, hideAddToCart = false }: ProductCardProps) {
+export function ProductCard({ product, hideAddToCart = false, tall = false }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
-        <div className="relative w-full h-36 bg-gray-200">
+        <div className={`relative w-full bg-gray-200 ${tall ? "aspect-[4/5]" : "h-36"}`}>
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
