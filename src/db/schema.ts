@@ -154,6 +154,62 @@ export const companies = pgTable("companies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// TRACKED LINKS TABLE
+// Enlaces cortos (/r/[slug]) que redirigen a una URL destino, usados para
+// compartir en redes sociales y medir de dónde viene el interés antes de
+// lanzar un proyecto nuevo (ver linkClicks para el detalle de cada visita).
+export const trackedLinks = pgTable(
+  "tracked_links",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull().unique(),
+    destinationUrl: text("destination_url").notNull(),
+    label: text("label").notNull(), // nombre interno, ej: "Encuesta IG - lanzamiento app"
+    active: boolean("active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    slugIdx: uniqueIndex("tracked_links_slug_idx").on(table.slug),
+  })
+);
+
+// LINK CLICKS TABLE
+// Una fila por visita a un tracked link. Geolocalización derivada de la IP
+// (aproximada a nivel ciudad, no exacta) — no se identifica a la persona ni
+// su cuenta de Google, solo de dónde y cuándo llegó el clic.
+export const linkClicks = pgTable(
+  "link_clicks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    linkId: uuid("link_id").notNull(),
+    clickedAt: timestamp("clicked_at").defaultNow(),
+    ipAddress: text("ip_address"),
+    city: text("city"),
+    region: text("region"),
+    country: text("country"),
+    countryCode: text("country_code"),
+    latitude: decimal("latitude", { precision: 9, scale: 6 }),
+    longitude: decimal("longitude", { precision: 9, scale: 6 }),
+    userAgent: text("user_agent"),
+    browser: text("browser"),
+    os: text("os"),
+    deviceType: text("device_type"),
+    referrer: text("referrer"),
+  },
+  (table) => ({
+    // Cada vista del admin agrupa/filtra clicks por link — sin esto,
+    // sequential scan completo de link_clicks en cada carga.
+    linkIdIdx: index("link_clicks_link_id_idx").on(table.linkId),
+    clickedAtIdx: index("link_clicks_clicked_at_idx").on(table.clickedAt),
+    // Cascade: borrar un tracked link borra también su historial de clics
+    // (ver confirmación de borrado en el admin).
+    linkFk: foreignKey({
+      columns: [table.linkId],
+      foreignColumns: [trackedLinks.id],
+    }).onDelete("cascade"),
+  })
+);
+
 // EXPORT TYPES
 export type Brand = typeof brands.$inferSelect;
 export type NewBrand = typeof brands.$inferInsert;
@@ -169,3 +225,9 @@ export type NewProductImage = typeof productImages.$inferInsert;
 
 export type Company = typeof companies.$inferSelect;
 export type NewCompany = typeof companies.$inferInsert;
+
+export type TrackedLink = typeof trackedLinks.$inferSelect;
+export type NewTrackedLink = typeof trackedLinks.$inferInsert;
+
+export type LinkClick = typeof linkClicks.$inferSelect;
+export type NewLinkClick = typeof linkClicks.$inferInsert;

@@ -19,8 +19,17 @@ export default auth((request) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // APIs: los GET quedan públicos (el catálogo los necesita), pero
-  // cualquier método de escritura sin sesión responde 401.
+  // /api/links: a diferencia del catálogo, esta data (clics, IPs
+  // aproximadas por link) no es pública — todo método requiere sesión.
+  if (pathname.startsWith("/api/links") && !isLoggedIn) {
+    return NextResponse.json(
+      { success: false, error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
+  // Resto de las APIs: los GET quedan públicos (el catálogo los necesita),
+  // pero cualquier método de escritura sin sesión responde 401.
   if (
     pathname.startsWith("/api/") &&
     WRITE_METHODS.includes(request.method) &&
@@ -43,5 +52,6 @@ export const config = {
     "/api/products/:path*",
     "/api/upload/:path*",
     "/api/company/:path*",
+    "/api/links/:path*",
   ],
 };

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth, signOut } from "@/src/lib/auth";
 
 export default async function AdminLayout({
@@ -14,16 +15,24 @@ export default async function AdminLayout({
           <span className="text-sm text-muted">
             Sesión iniciada como <strong>{session?.user?.email}</strong>
           </span>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <button type="submit" className="text-sm text-danger hover:underline">
-              Cerrar sesión
-            </button>
-          </form>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/adminMiTiendaSmart26/links"
+              className="text-sm text-primary hover:underline"
+            >
+              Rastreo de Links
+            </Link>
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
+            >
+              <button type="submit" className="text-sm text-danger hover:underline">
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
         </div>
       </div>
       {children}
