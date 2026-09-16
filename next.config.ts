@@ -12,6 +12,13 @@ const r2Hostname = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    // Vercel factura la optimización de imágenes por "source image" distinta
+    // procesada en el mes — con el catálogo creciendo esto se agota rápido
+    // (pasó recién: OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED). Como las
+    // imágenes ya se sirven desde un dominio propio de R2 (sin el rate limit
+    // del subdominio de pruebas), servirlas sin optimizar es más confiable
+    // que depender de esa cuota.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
