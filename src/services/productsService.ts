@@ -215,7 +215,6 @@ export class ProductService {
       await productImageRepository.create({
         productId: product.id,
         imageUrl: data.imageUrl,
-        isPrimary: true,
         order: 0,
       });
     }
@@ -328,7 +327,6 @@ export class ProductService {
         await productImageRepository.create({
           productId: id,
           imageUrl: data.imageUrl,
-          isPrimary: true,
           order: 0,
         });
         imageUrl = data.imageUrl;

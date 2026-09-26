@@ -110,8 +110,10 @@ export const productImages = pgTable(
     productId: uuid("product_id").notNull(),
     imageUrl: text("image_url").notNull(), // S3 URL
     altText: text("alt_text"), // SEO
-    order: integer("order").default(0), // Para ordenar galería
-    isPrimary: boolean("is_primary").default(false), // Imagen principal
+    // Define tanto el orden del carrusel como cuál es "la" imagen del
+    // producto (la de menor order) — antes había una columna is_primary
+    // aparte, redundante con esto y con riesgo de desincronizarse.
+    order: integer("order").default(0),
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => ({

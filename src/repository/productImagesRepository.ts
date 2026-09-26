@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "../db/client";
 import { productImages, NewProductImage } from "../db/schema";
 
@@ -7,21 +7,31 @@ export class ProductImageRepository {
     return db
       .select()
       .from(productImages)
-      .where(eq(productImages.productId, productId));
+      .where(eq(productImages.productId, productId))
+      .orderBy(asc(productImages.order));
   }
 
+  // "La" imagen de cada producto es la de menor order — se resuelve en
+  // memoria (no con una sola query agrupada) para no depender de sintaxis
+  // específica de Postgres como DISTINCT ON.
   async findPrimaryByProductIds(productIds: string[]) {
     if (productIds.length === 0) return [];
 
-    return db
+    const rows = await db
       .select()
       .from(productImages)
-      .where(
-        and(
-          inArray(productImages.productId, productIds),
-          eq(productImages.isPrimary, true)
-        )
-      );
+      .where(inArray(productImages.productId, productIds))
+      .orderBy(asc(productImages.order));
+
+    const seen = new Set<string>();
+    const primary: typeof rows = [];
+    for (const row of rows) {
+      if (!seen.has(row.productId)) {
+        seen.add(row.productId);
+        primary.push(row);
+      }
+    }
+    return primary;
   }
 
   async create(data: NewProductImage) {
