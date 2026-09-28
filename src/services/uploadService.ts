@@ -10,7 +10,11 @@ export class UploadService {
     file: Buffer,
     originalName: string,
     contentType: string,
-    folder: string = "products"
+    folder: string = "products",
+    // Código de inventario del producto: solo para reconocer a qué producto
+    // pertenece cada archivo al navegar el bucket (el orden real de las
+    // imágenes vive en product_images.order, no en el nombre).
+    namePrefix?: string
   ): Promise<string> {
     if (!ALLOWED_MIME_TYPES.includes(contentType)) {
       throw new Error("Tipo de archivo no permitido. Usa JPG, PNG, WEBP o AVIF");
@@ -21,7 +25,9 @@ export class UploadService {
     }
 
     const extension = originalName.split(".").pop()?.toLowerCase() || "jpg";
-    const key = `${folder}/${Date.now()}-${randomSlugSuffix(10)}.${extension}`;
+    const safePrefix = namePrefix?.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 10);
+    const base = safePrefix ? safePrefix : String(Date.now());
+    const key = `${folder}/${base}-${randomSlugSuffix(10)}.${extension}`;
 
     await r2Client.send(
       new PutObjectCommand({

@@ -29,8 +29,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const skuParam = formData.get("sku");
+    const namePrefix = typeof skuParam === "string" ? skuParam : undefined;
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadService.uploadImage(buffer, file.name, file.type, folder);
+    const url = await uploadService.uploadImage(buffer, file.name, file.type, folder, namePrefix);
 
     return NextResponse.json({
       success: true,
