@@ -8,6 +8,7 @@ import { useToast } from "@/components/common/ToastProvider";
 import { Input, Textarea, Select, Switch } from "@/components/form";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { ProductImagesManager } from "@/components/admin/ProductImagesManager";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { AlertModal } from "@/components/common/AlertModal";
 import { Modal } from "@/components/common/Modal";
@@ -460,7 +461,7 @@ export default function AdminPage() {
     active: true,
     featured: false,
     isNew: true,
-    imageUrl: "",
+    imageUrls: [] as string[],
   });
   // Si el usuario edita el precio en Bs a mano, dejamos de pisarlo cada vez
   // que cambia el precio en USD (que sí se recalcula automáticamente).
@@ -526,7 +527,7 @@ export default function AdminPage() {
     active: true,
     featured: false,
     isNew: true,
-    imageUrl: "",
+    imageUrls: [] as string[],
   });
   const [editProductSubmitAttempted, setEditProductSubmitAttempted] = useState(false);
   const [editProductImageUploading, setEditProductImageUploading] = useState(false);
@@ -806,7 +807,7 @@ export default function AdminPage() {
         active: true,
         featured: false,
         isNew: true,
-        imageUrl: "",
+        imageUrls: [],
       });
       setProductPriceBsTouched(false);
       setProductSlugTouched(false);
@@ -836,7 +837,7 @@ export default function AdminPage() {
       active: product.active,
       featured: product.featured,
       isNew: product.isNew,
-      imageUrl: product.imageUrl || "",
+      imageUrls: product.imageUrls || [],
     });
     setEditProductPriceBsTouched(false);
     setEditProductSubmitAttempted(false);
@@ -895,68 +896,6 @@ export default function AdminPage() {
       console.error(err);
     } finally {
       setProductsLoading(false);
-    }
-  };
-
-  const handleProductImageUpload = async (
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setProductImageUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setNewProduct((prev) => ({ ...prev, imageUrl: data.data.url }));
-      } else {
-        showError(data.error || "Error al subir la imagen");
-      }
-    } catch (err) {
-      showError("Error al subir la imagen");
-      console.error(err);
-    } finally {
-      setProductImageUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleEditProductImageUpload = async (
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setEditProductImageUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setEditProductForm((prev) => ({ ...prev, imageUrl: data.data.url }));
-      } else {
-        showError(data.error || "Error al subir la imagen");
-      }
-    } catch (err) {
-      showError("Error al subir la imagen");
-      console.error(err);
-    } finally {
-      setEditProductImageUploading(false);
-      e.target.value = "";
     }
   };
 
@@ -1304,12 +1243,11 @@ export default function AdminPage() {
             </div>
 
             <div className="mb-4">
-              <ImageUploader
-                mode="create"
-                imageUrl={newProduct.imageUrl}
-                uploading={productImageUploading}
-                onUpload={handleProductImageUpload}
-                onRemove={() => setNewProduct((prev) => ({ ...prev, imageUrl: "" }))}
+              <ProductImagesManager
+                imageUrls={newProduct.imageUrls}
+                sku={newProduct.sku}
+                onUploadingChange={setProductImageUploading}
+                onChange={(imageUrls) => setNewProduct((prev) => ({ ...prev, imageUrls }))}
               />
             </div>
 
@@ -1985,12 +1923,11 @@ export default function AdminPage() {
         </div>
 
         <div>
-          <ImageUploader
-            mode="edit"
-            imageUrl={editProductForm.imageUrl}
-            uploading={editProductImageUploading}
-            onUpload={handleEditProductImageUpload}
-            onRemove={() => setEditProductForm((prev) => ({ ...prev, imageUrl: "" }))}
+          <ProductImagesManager
+            imageUrls={editProductForm.imageUrls}
+            sku={editProductForm.sku}
+            onUploadingChange={setEditProductImageUploading}
+            onChange={(imageUrls) => setEditProductForm((prev) => ({ ...prev, imageUrls }))}
           />
         </div>
       </Modal>
