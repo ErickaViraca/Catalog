@@ -5,6 +5,8 @@ import { productImageRepository } from "../repository/productImagesRepository";
 import { companyRepository } from "../repository/companyRepository";
 import { NewProduct } from "../db/schema";
 
+const MAX_PRODUCT_IMAGES = 10;
+
 export class ProductService {
   // price * companies.dollar_price_bs — companies es una fila única sembrada
   // por migración, pero por las dudas si faltara, no bloquea el guardado.
@@ -14,19 +16,37 @@ export class ProductService {
     return (price * rate).toFixed(2);
   }
 
-  async getAllProducts(includeInactive = false) {
-    const items = await productRepository.findAll(includeInactive);
-    const primaryImages = await productImageRepository.findPrimaryByProductIds(
+  // Agrega a cada producto sus imágenes: imageUrls (todas, en orden) e
+  // imageUrl (la primera, que es "la" imagen del producto en listados).
+  private async withImages<T extends { id: string }>(items: T[]) {
+    const images = await productImageRepository.findByProductIds(
       items.map((item) => item.id)
     );
-    const imageByProductId = new Map(
-      primaryImages.map((image) => [image.productId, image.imageUrl])
-    );
+    const urlsByProductId = new Map<string, string[]>();
+    for (const image of images) {
+      const urls = urlsByProductId.get(image.productId) ?? [];
+      urls.push(image.imageUrl);
+      urlsByProductId.set(image.productId, urls);
+    }
 
-    return items.map((item) => ({
-      ...item,
-      imageUrl: imageByProductId.get(item.id) || null,
-    }));
+    return items.map((item) => {
+      const imageUrls = urlsByProductId.get(item.id) ?? [];
+      return { ...item, imageUrl: imageUrls[0] ?? null, imageUrls };
+    });
+  }
+
+  private validateImageUrls(imageUrls: string[]) {
+    if (imageUrls.length > MAX_PRODUCT_IMAGES) {
+      throw new Error(`Un producto no puede tener más de ${MAX_PRODUCT_IMAGES} imágenes`);
+    }
+    if (imageUrls.some((url) => typeof url !== "string" || url.trim().length === 0)) {
+      throw new Error("Las URLs de imagen no pueden estar vacías");
+    }
+  }
+
+  async getAllProducts(includeInactive = false) {
+    const items = await productRepository.findAll(includeInactive);
+    return this.withImages(items);
   }
 
   async getProductById(id: string) {
@@ -34,8 +54,7 @@ export class ProductService {
     const product = result[0];
     if (!product) return null;
 
-    const primaryImages = await productImageRepository.findPrimaryByProductIds([id]);
-    return { ...product, imageUrl: primaryImages[0]?.imageUrl || null };
+    return (await this.withImages([product]))[0];
   }
 
   async getProductBySlug(slug: string) {
@@ -43,8 +62,7 @@ export class ProductService {
     const product = result[0];
     if (!product) return null;
 
-    const primaryImages = await productImageRepository.findPrimaryByProductIds([product.id]);
-    return { ...product, imageUrl: primaryImages[0]?.imageUrl || null };
+    return (await this.withImages([product]))[0];
   }
 
   async getProductsByCategory(categoryId: string) {
@@ -119,8 +137,10 @@ export class ProductService {
     active?: boolean;
     featured?: boolean;
     isNew?: boolean;
-    imageUrl?: string;
+    imageUrls?: string[];
   }) {
+    if (data.imageUrls) this.validateImageUrls(data.imageUrls);
+
     if (!data.name || data.name.trim().length === 0) {
       throw new Error("El nombre del producto es requerido");
     }
@@ -211,15 +231,16 @@ export class ProductService {
     const product = result[0];
     if (!product) return null;
 
-    if (data.imageUrl) {
-      await productImageRepository.create({
+    const imageUrls = data.imageUrls ?? [];
+    await productImageRepository.createMany(
+      imageUrls.map((imageUrl, index) => ({
         productId: product.id,
-        imageUrl: data.imageUrl,
-        order: 0,
-      });
-    }
+        imageUrl,
+        order: index,
+      }))
+    );
 
-    return { ...product, imageUrl: data.imageUrl || null };
+    return { ...product, imageUrl: imageUrls[0] ?? null, imageUrls };
   }
 
   async updateProduct(
@@ -238,9 +259,11 @@ export class ProductService {
       active: boolean;
       featured: boolean;
       isNew: boolean;
-      imageUrl: string;
+      imageUrls: string[];
     }>
   ) {
+    if (data.imageUrls) this.validateImageUrls(data.imageUrls);
+
     const existing = await this.getProductById(id);
     if (!existing) {
       throw new Error("Producto no encontrado");
@@ -316,26 +339,31 @@ export class ProductService {
     if (data.featured !== undefined) updateData.featured = data.featured;
     if (data.isNew !== undefined) updateData.isNew = data.isNew;
 
-    const result = await productRepository.update(id, updateData);
+    // Un update que solo cambia imágenes no tiene campos de producto que
+    // escribir (el ORM falla con un SET vacío).
+    const result =
+      Object.keys(updateData).length > 0
+        ? await productRepository.update(id, updateData)
+        : await productRepository.findById(id);
     const product = result[0];
     if (!product) return null;
 
-    let imageUrl = existing.imageUrl;
-    if (data.imageUrl !== undefined) {
+    // Reemplazo completo del set de imágenes: el índice en el arreglo pasa a
+    // ser el order, así que la primera queda como "la" imagen del producto.
+    let imageUrls = existing.imageUrls;
+    if (data.imageUrls !== undefined) {
       await productImageRepository.deleteByProductId(id);
-      if (data.imageUrl) {
-        await productImageRepository.create({
+      await productImageRepository.createMany(
+        data.imageUrls.map((imageUrl, index) => ({
           productId: id,
-          imageUrl: data.imageUrl,
-          order: 0,
-        });
-        imageUrl = data.imageUrl;
-      } else {
-        imageUrl = null;
-      }
+          imageUrl,
+          order: index,
+        }))
+      );
+      imageUrls = data.imageUrls;
     }
 
-    return { ...product, imageUrl };
+    return { ...product, imageUrl: imageUrls[0] ?? null, imageUrls };
   }
 
   async deleteProduct(id: string) {

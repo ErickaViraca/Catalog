@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       active: body.active,
       featured: body.featured,
       isNew: body.isNew,
-      imageUrl: body.imageUrl,
+      imageUrls: body.imageUrls,
     });
 
     return NextResponse.json(

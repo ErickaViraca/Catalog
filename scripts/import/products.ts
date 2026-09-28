@@ -99,7 +99,7 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Im
         active: parseBooleanFlag(activeRaw),
         featured: parseBooleanFlag(featuredRaw),
         isNew: parseBooleanFlag(isNewRaw),
-        imageUrl: imageUrl || undefined,
+        imageUrls: imageUrl ? [imageUrl] : undefined,
       });
       result.created++;
     } catch (error) {

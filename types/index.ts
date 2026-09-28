@@ -5,9 +5,11 @@ import type {
 } from "@/src/db/schema";
 
 // Producto tal como lo devuelven las APIs (fila de la tabla products +
-// imageUrl, resuelto en el service a partir de product_images).
+// imageUrl, resuelto en el service a partir de product_images). imageUrls
+// (todas, en orden) solo viene en detalle/admin, no en los listados públicos.
 export interface Product extends DbProduct {
   imageUrl: string | null;
+  imageUrls?: string[];
 }
 
 export type Category = DbCategory;
