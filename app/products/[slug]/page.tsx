@@ -41,7 +41,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <ProductDetailView
         product={product}
-        imageUrl={product.imageUrl}
+        imageUrls={product.imageUrls}
         brandName={brand?.name}
         categoryName={category?.name}
       />

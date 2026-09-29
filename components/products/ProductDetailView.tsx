@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
+import { ProductImageCarousel } from "@/components/products/ProductImageCarousel";
 import { formatBs } from "@/src/lib/formatPrice";
 
 type Tab = "description" | "specs";
@@ -15,17 +14,15 @@ interface ProductDetailViewProps {
     priceBs: string | number;
     stock: number;
   };
-  imageUrl: string | null;
+  // Todas las imágenes del producto, en orden (la primera es la principal).
+  imageUrls: string[];
   brandName?: string;
   categoryName?: string;
 }
 
-// Una sola imagen por producto por ahora (product_images solo guarda la
-// principal hoy) — cuando haya soporte real de galería, esto vuelve a
-// necesitar el selector de miniaturas que tenía antes.
 export function ProductDetailView({
   product,
-  imageUrl,
+  imageUrls,
   brandName,
   categoryName,
 }: ProductDetailViewProps) {
@@ -36,20 +33,13 @@ export function ProductDetailView({
       {/* Gallery */}
       <div>
         <div className="relative w-full h-96 lg:h-[28rem] bg-gray-200 rounded-lg overflow-hidden mb-4">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ImagePlaceholder size={64} />
-            </div>
-          )}
+          <ProductImageCarousel
+            imageUrls={imageUrls}
+            alt={product.name}
+            className="absolute inset-0"
+          />
           {product.stock === 0 && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="absolute inset-0 pointer-events-none bg-black bg-opacity-50 flex items-center justify-center">
               <span className="text-white text-lg font-bold">Agotado</span>
             </div>
           )}
