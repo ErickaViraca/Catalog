@@ -39,8 +39,10 @@ export function ProductDetailView({
             className="absolute inset-0"
           />
           {product.stock === 0 && (
-            <div className="absolute inset-0 pointer-events-none bg-black bg-opacity-50 flex items-center justify-center">
-              <span className="text-white text-lg font-bold">Agotado</span>
+            <div className="absolute inset-0 pointer-events-none bg-white/30 backdrop-blur-sm flex items-center justify-center">
+              <span className="bg-black/70 text-white text-lg font-bold px-4 py-1.5 rounded-full">
+                Agotado
+              </span>
             </div>
           )}
         </div>
