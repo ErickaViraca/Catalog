@@ -58,9 +58,11 @@ export function ProductImageCarousel({
   const hasMany = imageUrls.length > 1;
 
   return (
-    <div className={`group ${className}`}>
+    // data-nested-carousel: los carruseles que contienen a esta galería (ej.
+    // el de Inicio) usan este marcador para no tomar los gestos que empiezan aquí.
+    <div className={`group ${className}`} data-nested-carousel={compact ? "" : undefined}>
       <div ref={emblaRef} className="overflow-hidden h-full">
-        <div className="flex h-full">
+        <div className="flex h-full touch-pan-y touch-pinch-zoom">
           {imageUrls.map((url, index) => (
             <div key={url} className="relative flex-[0_0_100%] min-w-0 h-full">
               {/* Solo se descarga la imagen actual y sus vecinas: con las

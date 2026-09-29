@@ -30,8 +30,9 @@ export function ProductCard({
 
   return (
     // Un <a> es arrastrable por defecto: sin esto el navegador inicia el
-    // arrastre del link y la galería no recibe el gesto del mouse.
-    <Link href={`/products/${product.slug}`} draggable={showGallery ? false : undefined}>
+    // arrastre del link y los carruseles (el de imágenes de la card y el de
+    // Inicio que la contiene) no reciben el gesto del mouse.
+    <Link href={`/products/${product.slug}`} draggable={false}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
         <div className={`relative w-full bg-gray-200 ${tall ? "aspect-[4/5]" : "h-36"}`}>
           {showGallery ? (
