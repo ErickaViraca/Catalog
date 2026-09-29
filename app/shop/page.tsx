@@ -4,7 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/products/Pagination";
 import { Button } from "@/components/common/Button";
-import { FilterCheckbox } from "@/components/products/FilterCheckbox";
+import { ShopFilters } from "@/components/products/ShopFilters";
+// Import directo del componente: desde la raíz del paquete el navegador
+// descarga todos los componentes de Material Tailwind (no se recortan).
+import { Drawer } from "@material-tailwind/react/dist/components/drawer";
 import { Product, Category, Brand } from "@/types";
 
 export default function ShopPage() {
@@ -25,6 +28,17 @@ export default function ShopPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   const productsTopRef = useRef<HTMLDivElement>(null);
+
+  // Panel de filtros del celular (en desktop los filtros van en la barra lateral)
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setFiltersOpen(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
 
   // Filtros del sidebar: se cargan una sola vez (solo categorías/marcas activas)
   useEffect(() => {
@@ -98,6 +112,30 @@ export default function ShopPage() {
     setPage(1);
   };
 
+  const clearFilters = () => {
+    setSelectedCategoryIds([]);
+    setSelectedBrandIds([]);
+    setPage(1);
+  };
+
+  const activeFilterCount = selectedCategoryIds.length + selectedBrandIds.length;
+
+  const sortSelect = (id: string) => (
+    <select
+      id={id}
+      value={sortBy}
+      onChange={(e) => {
+        setSortBy(e.target.value as "name" | "price-asc" | "price-desc");
+        setPage(1);
+      }}
+      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="name">Nombre (A-Z)</option>
+      <option value="price-asc">Precio (Menor a Mayor)</option>
+      <option value="price-desc">Precio (Mayor a Menor)</option>
+    </select>
+  );
+
   const goToPage = (newPage: number) => {
     setPage(newPage);
     productsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -112,66 +150,25 @@ export default function ShopPage() {
       <h1 className="text-4xl font-bold mb-8">Catálogo</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-        {/* Sidebar */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          {/* Todos los productos: atajo para limpiar categorías y marcas de una */}
-          <div className="mb-6">
-            <FilterCheckbox
-              label="Todos los productos"
-              checked={selectedCategoryIds.length === 0 && selectedBrandIds.length === 0}
-              onChange={() => {
-                setSelectedCategoryIds([]);
-                setSelectedBrandIds([]);
-                setPage(1);
-              }}
-            />
-          </div>
-
-          {/* Categories Filter: scroll vertical propio, sin borde ni flechas */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Categorías</h3>
-            <div className="scrollbar-minimal max-h-48 overflow-y-auto pr-1 space-y-2">
-              {categories.map((cat) => (
-                <FilterCheckbox
-                  key={cat.id}
-                  label={cat.name}
-                  checked={selectedCategoryIds.includes(cat.id)}
-                  onChange={() => toggleCategory(cat.id)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Brands Filter: scroll vertical propio, independiente del de Categorías */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Marcas</h3>
-            <div className="scrollbar-minimal max-h-48 overflow-y-auto pr-1 space-y-2">
-              {brands.map((brand) => (
-                <FilterCheckbox
-                  key={brand.id}
-                  label={brand.name}
-                  checked={selectedBrandIds.includes(brand.id)}
-                  onChange={() => toggleBrand(brand.id)}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Sidebar (solo desktop): en el celular estos filtros van en el panel */}
+        <div className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+          <ShopFilters
+            idPrefix="side"
+            categories={categories}
+            brands={brands}
+            selectedCategoryIds={selectedCategoryIds}
+            selectedBrandIds={selectedBrandIds}
+            onToggleCategory={toggleCategory}
+            onToggleBrand={toggleBrand}
+            onClear={clearFilters}
+          />
 
           {/* Sort */}
           <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-2">Ordenar por</h3>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value as "name" | "price-asc" | "price-desc");
-                setPage(1);
-              }}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="name">Nombre (A-Z)</option>
-              <option value="price-asc">Precio (Menor a Mayor)</option>
-              <option value="price-desc">Precio (Mayor a Menor)</option>
-            </select>
+            <label htmlFor="sort-side" className="block font-semibold text-sm mb-2">
+              Ordenar por
+            </label>
+            {sortSelect("sort-side")}
           </div>
         </div>
 
@@ -187,6 +184,46 @@ export default function ShopPage() {
               className="w-full sm:w-1/2 px-4 py-3 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
+          </div>
+
+          {/* Barra del celular: botón que abre el panel de filtros + orden */}
+          <div className="lg:hidden mb-6 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              aria-haspopup="dialog"
+              className="inline-flex items-center gap-2 shrink-0 rounded-full border border-gray-400 bg-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
+                <circle cx="16" cy="7" r="2" />
+                <circle cx="8" cy="17" r="2" />
+              </svg>
+              Filtros
+              {activeFilterCount > 0 && (
+                <span
+                  data-filter-count
+                  className="min-w-5 h-5 px-1 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center"
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <div className="flex-1">
+              <label htmlFor="sort-mobile" className="sr-only">
+                Ordenar por
+              </label>
+              {sortSelect("sort-mobile")}
+            </div>
           </div>
 
           {productsLoading ? (
@@ -233,6 +270,67 @@ export default function ShopPage() {
           )}
         </div>
       </div>
+
+      {/* Panel de filtros del celular. Los estilos van todos por className:
+          Tailwind no escanea node_modules, así que las clases internas del
+          Drawer no se generan y la posición/tamaño las damos nosotros. */}
+      <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <Drawer.Overlay className="z-[99] bg-black/40 drawer-overlay-enter">
+          <Drawer.Panel
+            placement="left"
+            aria-label="Filtros"
+            className="fixed inset-y-0 left-0 z-[100] w-[85%] max-w-sm h-full p-0 bg-white border-0 shadow-2xl flex flex-col drawer-panel-enter"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-lg font-bold">Filtros</h2>
+              <Drawer.DismissTrigger
+                aria-label="Cerrar filtros"
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </Drawer.DismissTrigger>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+              <ShopFilters
+                idPrefix="drawer"
+                categories={categories}
+                brands={brands}
+                selectedCategoryIds={selectedCategoryIds}
+                selectedBrandIds={selectedBrandIds}
+                onToggleCategory={toggleCategory}
+                onToggleBrand={toggleBrand}
+                onClear={clearFilters}
+              />
+            </div>
+
+            <div className="flex gap-3 px-5 py-4 border-t border-border">
+              <Button
+                variant="secondary"
+                className="shrink-0"
+                onClick={clearFilters}
+                disabled={activeFilterCount === 0}
+              >
+                Limpiar
+              </Button>
+              <Button className="flex-1 whitespace-nowrap" onClick={() => setFiltersOpen(false)}>
+                Ver {totalProducts} {totalProducts === 1 ? "producto" : "productos"}
+              </Button>
+            </div>
+          </Drawer.Panel>
+        </Drawer.Overlay>
+      </Drawer>
     </div>
   );
 }

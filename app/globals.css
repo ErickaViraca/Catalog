@@ -75,3 +75,39 @@ body {
   height: 0;
   width: 0;
 }
+
+/* Panel de filtros del celular (Drawer de Material Tailwind): sus
+   animaciones vienen de un plugin de Tailwind v3 que este proyecto no usa,
+   así que las definimos acá. */
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drawer-panel-enter {
+  animation: drawer-slide-in 0.22s ease-out;
+}
+
+.drawer-overlay-enter {
+  animation: drawer-fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel-enter,
+  .drawer-overlay-enter {
+    animation: none;
+  }
+}

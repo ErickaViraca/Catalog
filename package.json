@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1104.0",
-    "@material-tailwind/react": "^3.0.0-beta.24",
+    "@material-tailwind/react": "3.0.0-beta.24",
     "@vercel/analytics": "^2.0.1",
     "drizzle-orm": "^0.30.10",
     "embla-carousel-autoplay": "^8.6.0",
