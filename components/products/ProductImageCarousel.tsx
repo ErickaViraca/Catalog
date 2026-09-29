@@ -10,17 +10,21 @@ interface ProductImageCarouselProps {
   alt: string;
   // Se posiciona sobre el contenedor padre (que define el tamaño).
   className?: string;
+  // Versión para cards del catálogo: sin flechas, puntitos chicos que solo
+  // indican posición (la card entera es un link) y sin prioridad de carga.
+  compact?: boolean;
 }
 
 const ARROW_BASE =
   "hidden md:flex absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/90 text-label shadow-md border border-border transition-opacity duration-200 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-white";
 
-// Galería del detalle de producto: arrastre con el dedo/mouse (Embla) y, en
-// pantallas grandes, flechas que aparecen al pasar el mouse por la imagen.
+// Galería de imágenes de producto: arrastre con el dedo/mouse (Embla) y, en
+// el detalle, flechas que aparecen al pasar el mouse por la imagen.
 export function ProductImageCarousel({
   imageUrls,
   alt,
   className = "",
+  compact = false,
 }: ProductImageCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start" });
   const [selected, setSelected] = useState(0);
@@ -46,7 +50,7 @@ export function ProductImageCarousel({
   if (imageUrls.length === 0) {
     return (
       <div className={`flex items-center justify-center ${className}`}>
-        <ImagePlaceholder size={64} />
+        <ImagePlaceholder size={compact ? 48 : 64} />
       </div>
     );
   }
@@ -59,21 +63,30 @@ export function ProductImageCarousel({
         <div className="flex h-full">
           {imageUrls.map((url, index) => (
             <div key={url} className="relative flex-[0_0_100%] min-w-0 h-full">
-              <Image
-                src={url}
-                alt={hasMany ? `${alt} (${index + 1} de ${imageUrls.length})` : alt}
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                priority={index === 0}
-                draggable={false}
-                className="object-cover select-none"
-              />
+              {/* Solo se descarga la imagen actual y sus vecinas: con las
+                  imágenes sin optimizar, cargar las 10 de cada producto pesa
+                  demasiado (sobre todo en el catálogo, con 12 cards). */}
+              {Math.abs(index - selected) <= 1 && (
+                <Image
+                  src={url}
+                  alt={hasMany ? `${alt} (${index + 1} de ${imageUrls.length})` : alt}
+                  fill
+                  sizes={
+                    compact
+                      ? "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                      : "(min-width: 1024px) 50vw, 100vw"
+                  }
+                  priority={!compact && index === 0}
+                  draggable={false}
+                  className="object-cover select-none"
+                />
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {hasMany && (
+      {hasMany && !compact && (
         <>
           {canPrev && (
             <button
@@ -95,9 +108,26 @@ export function ProductImageCarousel({
               ›
             </button>
           )}
+        </>
+      )}
 
-          <div className="absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5 pointer-events-none">
-            {imageUrls.map((url, index) => (
+      {hasMany && (
+        <div
+          className={`absolute left-0 right-0 z-10 flex justify-center pointer-events-none ${
+            compact ? "bottom-2 gap-1" : "bottom-3 gap-1.5"
+          }`}
+        >
+          {imageUrls.map((url, index) =>
+            compact ? (
+              <span
+                key={url}
+                data-dot
+                data-active={index === selected}
+                className={`h-1.5 rounded-full shadow transition-all ${
+                  index === selected ? "w-3 bg-white" : "w-1.5 bg-white/60"
+                }`}
+              />
+            ) : (
               <button
                 key={url}
                 type="button"
@@ -107,9 +137,9 @@ export function ProductImageCarousel({
                   index === selected ? "w-5 bg-white" : "w-2 bg-white/60 hover:bg-white/80"
                 } shadow`}
               />
-            ))}
-          </div>
-        </>
+            )
+          )}
+        </div>
       )}
     </div>
   );

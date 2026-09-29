@@ -117,8 +117,8 @@ export const productImages = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => ({
-    // El más importante de los cuatro: findPrimaryByProductIds filtra por
-    // esta columna en cada carga de /products/[slug], en cada listado del
+    // El más importante de los cuatro: findByProductIds filtra por esta
+    // columna en cada carga de /products/[slug], en cada listado del
     // catálogo y en el admin — sin índice, es sequential scan completo de
     // product_images en cada una de esas requests.
     productIdIdx: index("product_images_product_id_idx").on(table.productId),

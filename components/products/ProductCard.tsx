@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Product } from "@/types";
 import { Button } from "@/components/common/Button";
 import { ImagePlaceholder } from "@/components/common/ImagePlaceholder";
+import { ProductImageCarousel } from "@/components/products/ProductImageCarousel";
 import { formatBs } from "@/src/lib/formatPrice";
 
 interface ProductCardProps {
@@ -13,15 +14,34 @@ interface ProductCardProps {
   // Catálogo (/shop) usa una imagen más alta para darle más protagonismo
   // al producto; el carrusel de Inicio mantiene la proporción original.
   tall?: boolean;
+  // Catálogo: si el producto tiene varias imágenes, se pueden deslizar
+  // dentro de la card (con puntitos de posición).
+  swipeImages?: boolean;
 }
 
-export function ProductCard({ product, hideAddToCart = false, tall = false }: ProductCardProps) {
+export function ProductCard({
+  product,
+  hideAddToCart = false,
+  tall = false,
+  swipeImages = false,
+}: ProductCardProps) {
+  const imageUrls = product.imageUrls ?? [];
+  const showGallery = swipeImages && imageUrls.length > 1;
 
   return (
-    <Link href={`/products/${product.slug}`}>
+    // Un <a> es arrastrable por defecto: sin esto el navegador inicia el
+    // arrastre del link y la galería no recibe el gesto del mouse.
+    <Link href={`/products/${product.slug}`} draggable={showGallery ? false : undefined}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
         <div className={`relative w-full bg-gray-200 ${tall ? "aspect-[4/5]" : "h-36"}`}>
-          {product.imageUrl ? (
+          {showGallery ? (
+            <ProductImageCarousel
+              imageUrls={imageUrls}
+              alt={product.name}
+              className="absolute inset-0"
+              compact
+            />
+          ) : product.imageUrl ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
@@ -34,7 +54,7 @@ export function ProductCard({ product, hideAddToCart = false, tall = false }: Pr
             </div>
           )}
           {product.stock === 0 && (
-            <div className="absolute inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center">
+            <div className="absolute inset-0 pointer-events-none bg-white/30 backdrop-blur-sm flex items-center justify-center">
               <span className="bg-black/70 text-white text-sm font-bold px-3 py-1 rounded-full">
                 Agotado
               </span>

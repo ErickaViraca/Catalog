@@ -104,18 +104,8 @@ export class ProductService {
       limit,
     });
 
-    const primaryImages = await productImageRepository.findPrimaryByProductIds(
-      rows.map((row) => row.id)
-    );
-    const imageByProductId = new Map(
-      primaryImages.map((image) => [image.productId, image.imageUrl])
-    );
-
     return {
-      items: rows.map((row) => ({
-        ...row,
-        imageUrl: imageByProductId.get(row.id) || null,
-      })),
+      items: await this.withImages(rows),
       total,
       page,
       limit,
