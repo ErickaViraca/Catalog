@@ -19,7 +19,7 @@
         "resourceType": "microsoft.insights/components",
         "parameters": [
           {
-            "id": "e02fc117-7598-416e-9b97-2c40da70582e",
+            "id": "28c474d1-0945-41da-9a7f-84e2837c9698",
             "version": "KqlParameterItem/1.0",
             "name": "TimeRange",
             "label": "Time range",
@@ -62,7 +62,7 @@
             }
           },
           {
-            "id": "684c1a7e-f97c-4504-ba54-4ea9174f6494",
+            "id": "8f2136f5-2955-4234-9a8b-8c80ebf6e7d7",
             "version": "KqlParameterItem/1.0",
             "name": "ManagingOrganizationId",
             "label": "ManagingOrganizationId",
@@ -86,7 +86,7 @@
             "resourceType": "microsoft.insights/components"
           },
           {
-            "id": "496175f7-40dd-4979-8d28-c29016e5f895",
+            "id": "2a1a3ae6-be82-4894-b4e4-262a1798432e",
             "version": "KqlParameterItem/1.0",
             "name": "OrganizationId",
             "label": "OrganizationId",
@@ -120,7 +120,7 @@
         "style": "tabs",
         "links": [
           {
-            "id": "a35ce73a-90fb-4fa5-8e5f-38e7c9730c4b",
+            "id": "51975862-a5e0-4ac8-a145-286faa918f8d",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Exceptions",
@@ -128,7 +128,7 @@
             "style": "link"
           },
           {
-            "id": "37cab937-0eb1-4c5a-9637-459010eb3a4f",
+            "id": "a4bcf8c0-6f8c-43e8-aad8-621726cc6836",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Requests",
@@ -261,7 +261,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Requests = sum(itemCount),\n            Failed = sumif(itemCount, success == false),\n            P95 = percentile(duration, 95)\n| extend FailurePct = round(100.0 * Failed / Requests, 1)\n| project Data = pack_array(\n    bag_pack(\"Metric\", \"Requests\", \"Value\", Requests),\n    bag_pack(\"Metric\", \"Failed requests\", \"Value\", Failed),\n    bag_pack(\"Metric\", \"Failure rate %\", \"Value\", FailurePct),\n    bag_pack(\"Metric\", \"P95 duration (ms)\", \"Value\", round(P95, 0)))\n| mv-expand Data\n| project Metric = tostring(Data.Metric), Value = todouble(Data.Value)",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Known noise: ignore 500s from getConnectionInfo\n| where not(resultCode == \"500\" and name has \"getConnectionInfo\")\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Requests = sum(itemCount),\n            Failed = sumif(itemCount, success == false),\n            P95 = percentile(duration, 95)\n| extend FailurePct = round(100.0 * Failed / Requests, 1)\n| project Data = pack_array(\n    bag_pack(\"Metric\", \"Requests\", \"Value\", Requests),\n    bag_pack(\"Metric\", \"Failed requests\", \"Value\", Failed),\n    bag_pack(\"Metric\", \"Failure rate %\", \"Value\", FailurePct),\n    bag_pack(\"Metric\", \"P95 duration (ms)\", \"Value\", round(P95, 0)))\n| mv-expand Data\n| project Metric = tostring(Data.Metric), Value = todouble(Data.Value)",
               "size": 4,
               "title": "Summary",
               "timeContextFromParameter": "TimeRange",
@@ -296,7 +296,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Failed = sumif(itemCount, success == false) by bin(timestamp, {TimeRange:grain})\n| order by timestamp asc",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Known noise: ignore 500s from getConnectionInfo\n| where not(resultCode == \"500\" and name has \"getConnectionInfo\")\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Failed = sumif(itemCount, success == false) by bin(timestamp, {TimeRange:grain})\n| order by timestamp asc",
               "size": 0,
               "title": "Failed requests over time",
               "timeContextFromParameter": "TimeRange",
@@ -311,7 +311,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| extend RawId = iff(MgOrg in (AllVals), MgOrgId, OrgId)\n| extend Level = iff(MgOrg in (AllVals), \"Managing Org\", \"Organization\")\n| summarize Requests = sum(itemCount),\n            Failed = sumif(itemCount, success == false),\n            P95_ms = round(percentile(duration, 95), 0)\n          by Level, Id = iff(isempty(RawId), \"(no ID)\", RawId)\n| extend FailurePct = round(100.0 * Failed / Requests, 1)\n| order by Failed desc, Requests desc",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Known noise: ignore 500s from getConnectionInfo\n| where not(resultCode == \"500\" and name has \"getConnectionInfo\")\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| extend RawId = iff(MgOrg in (AllVals), MgOrgId, OrgId)\n| extend Level = iff(MgOrg in (AllVals), \"Managing Org\", \"Organization\")\n| summarize Requests = sum(itemCount),\n            Failed = sumif(itemCount, success == false),\n            P95_ms = round(percentile(duration, 95), 0)\n          by Level, Id = iff(isempty(RawId), \"(no ID)\", RawId)\n| extend FailurePct = round(100.0 * Failed / Requests, 1)\n| order by Failed desc, Requests desc",
               "size": 0,
               "title": "Breakdown (Managing Org → Organization)",
               "timeContextFromParameter": "TimeRange",
@@ -346,7 +346,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| where success == false\n| project timestamp, name, resultCode, duration,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Known noise: ignore 500s from getConnectionInfo\n| where not(resultCode == \"500\" and name has \"getConnectionInfo\")\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| where success == false\n| project timestamp, name, resultCode, duration,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
               "size": 0,
               "title": "Latest failed requests",
               "timeContextFromParameter": "TimeRange",
