@@ -1,0 +1,377 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "name": "Título",
+      "content": {
+        "json": "## Incidencias por organización\nFiltra primero por rango de tiempo; luego, opcionalmente, por **ManagingOrganizationId** y **OrganizationId**. `All` = sin filtro."
+      }
+    },
+    {
+      "type": 9,
+      "name": "Filtros",
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "parameters": [
+          {
+            "id": "30308aab-13d6-4dc6-91b5-dd8fa683c748",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Rango de tiempo",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 86400000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 900000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2592000000
+                }
+              ],
+              "allowCustom": true
+            }
+          },
+          {
+            "id": "1689287c-ff63-4f6d-b1eb-54a5e77b7cca",
+            "version": "KqlParameterItem/1.0",
+            "name": "ManagingOrganizationId",
+            "label": "ManagingOrganizationId",
+            "type": 2,
+            "description": "All = todas. '(sin Managing Org)' = solo registros que no traen ese ID.",
+            "query": "union exceptions, requests\n| where timestamp {TimeRange}\n| where not(itemType == \"exception\" and client_Type == \"Browser\")\n| where tostring(customDimensions) contains \"organizationid\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where isnotempty(MgOrgId)\n| summarize n = sum(itemCount) by MgOrgId\n| order by n desc\n| project value = MgOrgId, label = MgOrgId\n| union (print value = \"__none__\", label = \"(sin Managing Org)\")",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*",
+              "showDefault": false
+            },
+            "defaultValue": "value::all",
+            "value": "value::all",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "timeContextFromParameter": "TimeRange",
+            "queryType": 0,
+            "resourceType": "microsoft.insights/components"
+          },
+          {
+            "id": "4e07fc5f-cf2c-4360-ad41-a28e0ffbdb56",
+            "version": "KqlParameterItem/1.0",
+            "name": "OrganizationId",
+            "label": "OrganizationId",
+            "type": 2,
+            "description": "Lista las organizaciones de la Managing Org elegida (o todas si está en All).",
+            "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nunion exceptions, requests\n| where timestamp {TimeRange}\n| where not(itemType == \"exception\" and client_Type == \"Browser\")\n| where tostring(customDimensions) contains \"organizationid\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where isnotempty(OrgId)\n| summarize n = sum(itemCount), Mg = take_anyif(MgOrgId, isnotempty(MgOrgId)) by OrgId\n| order by n desc\n| project value = OrgId, label = strcat(OrgId, \"  ·  \", iff(isempty(Mg), \"sin Managing Org\", strcat(\"MgOrg \", Mg)))",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*",
+              "showDefault": false
+            },
+            "defaultValue": "value::all",
+            "value": "value::all",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "timeContextFromParameter": "TimeRange",
+            "queryType": 0,
+            "resourceType": "microsoft.insights/components"
+          }
+        ]
+      }
+    },
+    {
+      "type": 11,
+      "name": "Pestañas",
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "links": [
+          {
+            "id": "c5120b8b-3e2a-48ac-bed6-c65207cbaaf0",
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Excepciones",
+            "subTarget": "exceptions",
+            "style": "link"
+          },
+          {
+            "id": "76ec232f-75f1-4fe6-ba01-d7fa75b93dc8",
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Requests",
+            "subTarget": "requests",
+            "style": "link"
+          }
+        ]
+      }
+    },
+    {
+      "type": 12,
+      "name": "Pestaña Excepciones",
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Excepciones = sum(itemCount),\n            MgOrgs = dcountif(MgOrgId, isnotempty(MgOrgId)),\n            Orgs = dcountif(OrgId, isnotempty(OrgId)),\n            SinId = sumif(itemCount, isempty(MgOrgId) and isempty(OrgId))\n| project Data = pack_array(\n    bag_pack(\"Metrica\", \"Excepciones\", \"Valor\", Excepciones),\n    bag_pack(\"Metrica\", \"Managing orgs afectadas\", \"Valor\", MgOrgs),\n    bag_pack(\"Metrica\", \"Organizaciones afectadas\", \"Valor\", Orgs),\n    bag_pack(\"Metrica\", \"Sin ID asociado\", \"Valor\", SinId))\n| mv-expand Data\n| project Metrica = tostring(Data.Metrica), Valor = tolong(Data.Valor)",
+              "size": 4,
+              "title": "Resumen",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Metrica",
+                  "formatter": 1
+                },
+                "leftContent": {
+                  "columnMatch": "Valor",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto"
+                  },
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 4,
+                      "maximumFractionDigits": 1
+                    }
+                  }
+                },
+                "showBorder": true
+              }
+            },
+            "name": "Resumen"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Excepciones = sum(itemCount) by bin(timestamp, {TimeRange:grain})\n| order by timestamp asc",
+              "size": 0,
+              "title": "Excepciones en el tiempo",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "barchart"
+            },
+            "name": "Excepciones en el tiempo",
+            "customWidth": "60"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nlet total = toscalar(F | summarize sum(itemCount));\nF\n| extend RawId = iff(MgOrg in (AllVals), MgOrgId, OrgId)\n| extend Nivel = iff(MgOrg in (AllVals), \"Managing Org\", \"Organization\")\n| summarize Excepciones = sum(itemCount) by Nivel, Id = iff(isempty(RawId), \"(sin ID)\", RawId)\n| extend Porcentaje = round(100.0 * Excepciones / total, 1)\n| order by Excepciones desc",
+              "size": 0,
+              "title": "Desglose (Managing Org → Organization)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Excepciones",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "blue"
+                    }
+                  }
+                ],
+                "rowLimit": 50,
+                "filter": true
+              }
+            },
+            "name": "Desglose (Managing Org → Organization)",
+            "customWidth": "40"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| project timestamp, operation_Name, type, outerMessage,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
+              "size": 0,
+              "title": "Últimas excepciones",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [],
+                "rowLimit": 200,
+                "filter": true
+              }
+            },
+            "name": "Últimas excepciones"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "exceptions"
+      }
+    },
+    {
+      "type": 12,
+      "name": "Pestaña Requests",
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Requests = sum(itemCount),\n            Fallidas = sumif(itemCount, success == false),\n            P95 = percentile(duration, 95)\n| extend PctFallo = round(100.0 * Fallidas / Requests, 1)\n| project Data = pack_array(\n    bag_pack(\"Metrica\", \"Requests\", \"Valor\", Requests),\n    bag_pack(\"Metrica\", \"Requests fallidas\", \"Valor\", Fallidas),\n    bag_pack(\"Metrica\", \"% de fallo\", \"Valor\", PctFallo),\n    bag_pack(\"Metrica\", \"Duración P95 (ms)\", \"Valor\", round(P95, 0)))\n| mv-expand Data\n| project Metrica = tostring(Data.Metrica), Valor = todouble(Data.Valor)",
+              "size": 4,
+              "title": "Resumen",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Metrica",
+                  "formatter": 1
+                },
+                "leftContent": {
+                  "columnMatch": "Valor",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto"
+                  },
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 4,
+                      "maximumFractionDigits": 1
+                    }
+                  }
+                },
+                "showBorder": true
+              }
+            },
+            "name": "Resumen"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| summarize Fallidas = sumif(itemCount, success == false) by bin(timestamp, {TimeRange:grain})\n| order by timestamp asc",
+              "size": 0,
+              "title": "Requests fallidas en el tiempo",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "barchart"
+            },
+            "name": "Requests fallidas en el tiempo",
+            "customWidth": "60"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| extend RawId = iff(MgOrg in (AllVals), MgOrgId, OrgId)\n| extend Nivel = iff(MgOrg in (AllVals), \"Managing Org\", \"Organization\")\n| summarize Requests = sum(itemCount),\n            Fallidas = sumif(itemCount, success == false),\n            P95_ms = round(percentile(duration, 95), 0)\n          by Nivel, Id = iff(isempty(RawId), \"(sin ID)\", RawId)\n| extend PctFallo = round(100.0 * Fallidas / Requests, 1)\n| order by Fallidas desc, Requests desc",
+              "size": 0,
+              "title": "Desglose (Managing Org → Organization)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Fallidas",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "redBright"
+                    }
+                  },
+                  {
+                    "columnMatch": "Requests",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "blue"
+                    }
+                  }
+                ],
+                "rowLimit": 50,
+                "filter": true
+              }
+            },
+            "name": "Desglose (Managing Org → Organization)",
+            "customWidth": "40"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd),\n         OrgId   = extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd)\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| where success == false\n| project timestamp, name, resultCode, duration,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
+              "size": 0,
+              "title": "Últimas requests fallidas",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [],
+                "rowLimit": 200,
+                "filter": true
+              }
+            },
+            "name": "Últimas requests fallidas"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "requests"
+      }
+    }
+  ],
+  "fallbackResourceIds": [
+    "PEGA_AQUI_TU_RESOURCE_ID"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
