@@ -19,7 +19,7 @@
         "resourceType": "microsoft.insights/components",
         "parameters": [
           {
-            "id": "30e50b06-c6f6-424e-8940-61d33b76b002",
+            "id": "e02fc117-7598-416e-9b97-2c40da70582e",
             "version": "KqlParameterItem/1.0",
             "name": "TimeRange",
             "label": "Time range",
@@ -62,7 +62,7 @@
             }
           },
           {
-            "id": "6c739105-9f1e-4cb7-966b-182cb9165705",
+            "id": "684c1a7e-f97c-4504-ba54-4ea9174f6494",
             "version": "KqlParameterItem/1.0",
             "name": "ManagingOrganizationId",
             "label": "ManagingOrganizationId",
@@ -86,7 +86,7 @@
             "resourceType": "microsoft.insights/components"
           },
           {
-            "id": "8f793996-e10a-45f7-bb93-b96e0dc39cd8",
+            "id": "496175f7-40dd-4979-8d28-c29016e5f895",
             "version": "KqlParameterItem/1.0",
             "name": "OrganizationId",
             "label": "OrganizationId",
@@ -120,7 +120,7 @@
         "style": "tabs",
         "links": [
           {
-            "id": "5e959e4e-bf89-4ac1-b6ff-88913c1f13d6",
+            "id": "a35ce73a-90fb-4fa5-8e5f-38e7c9730c4b",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Exceptions",
@@ -128,7 +128,7 @@
             "style": "link"
           },
           {
-            "id": "acdaec56-2a95-406b-9579-74c1be0615df",
+            "id": "37cab937-0eb1-4c5a-9637-459010eb3a4f",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Requests",
@@ -371,7 +371,7 @@
     }
   ],
   "fallbackResourceIds": [
-    "PEGA_AQUI_TU_RESOURCE_ID"
+    "PASTE_YOUR_RESOURCE_ID_HERE"
   ],
   "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
 }
