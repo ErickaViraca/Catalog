@@ -19,7 +19,7 @@
         "resourceType": "microsoft.insights/components",
         "parameters": [
           {
-            "id": "6ff050e7-1b0f-441b-85b3-7f77a4d6542a",
+            "id": "80374970-f3aa-4bfa-a804-1138071f37ec",
             "version": "KqlParameterItem/1.0",
             "name": "TimeRange",
             "label": "Time range",
@@ -62,7 +62,7 @@
             }
           },
           {
-            "id": "3348efd8-efc1-457c-bc28-94c756a4d23b",
+            "id": "93858996-5bb9-461f-925b-1afcbef5aaf0",
             "version": "KqlParameterItem/1.0",
             "name": "ManagingOrganizationId",
             "label": "ManagingOrganizationId",
@@ -86,7 +86,7 @@
             "resourceType": "microsoft.insights/components"
           },
           {
-            "id": "8466d75a-ef71-412c-bc45-f96cbb11193f",
+            "id": "ec86ab7d-81e1-4dbb-a41c-4b75d8984524",
             "version": "KqlParameterItem/1.0",
             "name": "OrganizationId",
             "label": "OrganizationId",
@@ -120,7 +120,7 @@
         "style": "tabs",
         "links": [
           {
-            "id": "4c1d1d2a-a150-4d99-9cf8-32d45314a9f0",
+            "id": "3a5210e0-0b11-4725-84c4-918f1391a07c",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Exceptions",
@@ -128,7 +128,7 @@
             "style": "link"
           },
           {
-            "id": "cbd24323-2f01-4a4a-bedf-2be86fbf51fd",
+            "id": "dde1e57d-879c-4d1b-b34e-033c91429011",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Requests",
@@ -222,6 +222,33 @@
             },
             "name": "Breakdown (Managing Org → Organization)",
             "customWidth": "40"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nlet total = toscalar(F | summarize sum(itemCount));\nF\n| summarize Count = sum(itemCount),\n            Operations = dcount(operation_Name),\n            TopOperation = take_any(operation_Name),\n            SampleMessage = take_any(outerMessage),\n            LastSeen = max(timestamp)\n          by ExceptionType = type, Method = method, problemId\n| extend Percentage = round(100.0 * Count / total, 1)\n| order by Count desc\n| extend CumulativePct = round(row_cumsum(Percentage), 1)\n| project ExceptionType, Method, Count, Percentage, CumulativePct, Operations, TopOperation,\n          SampleMessage, LastSeen",
+              "size": 0,
+              "title": "Top errors by type",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "rowLimit": 200,
+                "filter": true,
+                "formatters": [
+                  {
+                    "columnMatch": "Count",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "blue"
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "Top errors by type"
           },
           {
             "type": 3,
@@ -449,6 +476,33 @@
             },
             "name": "Breakdown (Managing Org → Organization)",
             "customWidth": "40"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Noise: HEAD/OPTIONS probes, static files and bot/scanner paths (.php, .png, ...)\n| where not(name startswith \"HEAD \" or name startswith \"OPTIONS \")\n| where not(name matches regex @\"(?i)\\.(php\\d?|aspx?|jsp|cgi|env|git|bak|sql|zip|png|jpe?g|gif|svg|ico|webp|css|js|map|txt|xml|woff2?|ttf|eot|html?)(/|$)\")\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nlet total = toscalar(F | where success == false | summarize sum(itemCount));\nF\n| where success == false\n| summarize Count = sum(itemCount),\n            P95_ms = round(percentile(duration, 95), 0),\n            LastSeen = max(timestamp)\n          by Endpoint = name, StatusCode = resultCode\n| extend Percentage = round(100.0 * Count / total, 1)\n| order by Count desc\n| extend CumulativePct = round(row_cumsum(Percentage), 1)\n| project Endpoint, StatusCode, Count, Percentage, CumulativePct, P95_ms, LastSeen",
+              "size": 0,
+              "title": "Top failed requests by endpoint and status",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.insights/components",
+              "visualization": "table",
+              "gridSettings": {
+                "rowLimit": 200,
+                "filter": true,
+                "formatters": [
+                  {
+                    "columnMatch": "Count",
+                    "formatter": 4,
+                    "formatOptions": {
+                      "palette": "redBright"
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "Top failed requests by endpoint and status"
           },
           {
             "type": 3,
