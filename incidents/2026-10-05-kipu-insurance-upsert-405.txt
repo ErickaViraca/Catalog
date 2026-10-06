@@ -1,0 +1,83 @@
+TITLE
+Elevate Insurance Merge Remap fails on 4 Kipu instances: PUT insurance upsert returns 405
+
+SUMMARY
+On 2026-10-05 the Elevate Insurance Merge Remap process (EventGridKipuProcessor, event Kind = ElevateInsuranceMergeRemap) failed for about 2,276 treatment episodes.
+For each episode we call:
+  PUT https://{instance}.kipuworks.com/api/emr/avea/patients/{id}/insurances/{id}/upsert
+This call returns 200 on most Kipu instances, but returns 405 Method Not Allowed on these four:
+  t-billing-clone.kipuworks.com (14,760 calls)
+  s-cms.kipuworks.com (162 calls)
+  istest.kipuworks.com (14 calls)
+  rprc13272.kipuworks.com (6 calls)
+Kipu sends the 405 as an HTML page. KipuApiClient.KipuRequest does not check the status code and tries to parse it as JSON, which throws:
+  Newtonsoft.Json.JsonReaderException: Unexpected character encountered while parsing value: <
+Event Grid then retried each event about 10 times, producing around 44,000 exceptions.
+
+PROBABLE ROOT CAUSE
+The four Kipu instances above do not have the PUT .../insurances/{id}/upsert route available, most likely because they are not running the same Kipu API version as the instances where it works. Three of them look like non-production instances (t-billing-clone, s-cms, istest). This still needs to be confirmed with Kipu.
+
+IMPACT
+- About 2,276 treatment episodes (5 merge operations) were not synced to Kipu.
+- About 44,000 exceptions in Application Insights (each failure is logged twice: by the function and by the Event Grid webhook).
+- Window: 2026-10-05 21:35 UTC to 2026-10-06 ~11:30 UTC.
+
+KEY FACTS
+- The same merge process worked earlier the same day: 2026-10-05 10:00-13:00 UTC, 8,607 upsert calls to bld10957 returned 200.
+- Other EventGridKipuProcessor events kept succeeding during the incident, so Kipu was up.
+- Retries spaced over hours kept failing, so it is not throttling or a temporary outage.
+- Code path: EventGridKipuProcessor.Run > KipuService.ProcessElevateInsuranceMergeRemapAsync (KipuService.cs:454) > PutElevateInsuranceMergeRemapAsync (KipuService.cs:911) > KipuApiClient.SendInsuranceToKipuAsync (KipuApiClient.cs:158) > KipuRequest > JsonConvert.DeserializeObject
+- Side finding: one call was built with an empty Kipu patient id (DELETE /api/emr/avea/patients//insurances/{id} on aehc12637) and returned 404.
+
+ACTIONS
+1. Confirm with Kipu the API version on t-billing-clone, s-cms, istest and rprc13272, and whether the insurance upsert route exists there.
+2. Find which Avea practices point to those instances and decide: upgrade the instance, fix the practice configuration, or exclude them from the sync.
+3. KipuApiClient.KipuRequest: check the status code and content type before parsing JSON, and log method, URL and status code when it fails.
+4. Do not retry 4xx errors (400, 404, 405, 422). Keep retries only for 429 and 5xx.
+5. Validate the Kipu patient id before building the URL.
+6. Check the Event Grid subscription (max delivery attempts and dead-letter) and re-sync the affected episodes after the fix, at least those on rprc13272.
+
+KQL - EVIDENCE 1: same endpoint, 200 on most instances, 405 on four
+dependencies
+| where timestamp between (datetime(2026-10-05) .. datetime(2026-10-07))
+| where type =~ "HTTP" and target endswith "kipuworks.com"
+| extend Endpoint = replace_regex(name, @"[0-9a-fA-F]{8}-[0-9a-fA-F-]{27}|\b\d+\b", "{id}")
+| where Endpoint == "PUT /api/emr/avea/patients/{id}/insurances/{id}/upsert"
+| summarize Calls = sum(itemCount),
+            OK = sumif(itemCount, resultCode startswith "2"),
+            Http405 = sumif(itemCount, resultCode == "405")
+          by KipuInstance = target
+| order by Http405 desc, Calls desc
+
+KQL - EVIDENCE 2: every failed operation maps to a 405 from Kipu
+let failedOps = exceptions
+    | where timestamp between (datetime(2026-10-05) .. datetime(2026-10-07))
+    | where method == "Newtonsoft.Json.JsonTextReader.ParseValue"
+    | distinct operation_Id;
+dependencies
+| where timestamp between (datetime(2026-10-05) .. datetime(2026-10-07))
+| where operation_Id in (failedOps) and type =~ "HTTP"
+| extend Endpoint = replace_regex(name, @"[0-9a-fA-F]{8}-[0-9a-fA-F-]{27}|\b\d+\b", "{id}")
+| summarize Calls = sum(itemCount) by target, Endpoint, resultCode
+| order by Calls desc
+
+KQL - EVIDENCE 3: affected merge operations, episodes and retries
+exceptions
+| where timestamp between (datetime(2026-10-05) .. datetime(2026-10-07))
+| where method == "Newtonsoft.Json.JsonTextReader.ParseValue"
+| extend cd = tostring(customDimensions)
+| extend MergeOperationID = extract(@'MergeOperationID[\\"]+:[\\"]+([0-9a-f-]{36})', 1, cd),
+         TreatmentEpisodeID = extract(@'ObjectID[\\"]+:[\\"]+([0-9a-f-]{36})', 1, cd)
+| where isnotempty(TreatmentEpisodeID)
+| summarize Exceptions = sum(itemCount), Episodes = dcount(TreatmentEpisodeID),
+            FirstError = min(timestamp), LastError = max(timestamp)
+          by MergeOperationID
+| order by Exceptions desc
+
+KQL - EVIDENCE 4: other Kipu events kept succeeding (Kipu was up)
+traces
+| where timestamp between (datetime(2026-10-04) .. datetime(2026-10-07))
+| where message startswith "Executed 'EventGridKipuProcessor'"
+| extend Status = extract(@"\((Succeeded|Failed),", 1, message)
+| summarize Executions = count() by bin(timestamp, 1h), Status
+| render timechart
