@@ -19,7 +19,7 @@
         "resourceType": "microsoft.insights/components",
         "parameters": [
           {
-            "id": "cc039c06-c2dc-4067-814b-4b31de2defa2",
+            "id": "6ff050e7-1b0f-441b-85b3-7f77a4d6542a",
             "version": "KqlParameterItem/1.0",
             "name": "TimeRange",
             "label": "Time range",
@@ -62,7 +62,7 @@
             }
           },
           {
-            "id": "04120295-df77-464f-8fe8-48eaa98ddab5",
+            "id": "3348efd8-efc1-457c-bc28-94c756a4d23b",
             "version": "KqlParameterItem/1.0",
             "name": "ManagingOrganizationId",
             "label": "ManagingOrganizationId",
@@ -86,7 +86,7 @@
             "resourceType": "microsoft.insights/components"
           },
           {
-            "id": "d7268501-6957-43b4-8897-cc19d5294c8c",
+            "id": "8466d75a-ef71-412c-bc45-f96cbb11193f",
             "version": "KqlParameterItem/1.0",
             "name": "OrganizationId",
             "label": "OrganizationId",
@@ -120,7 +120,7 @@
         "style": "tabs",
         "links": [
           {
-            "id": "95a05be2-fb64-4510-bedb-b12e69d56540",
+            "id": "4c1d1d2a-a150-4d99-9cf8-32d45314a9f0",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Exceptions",
@@ -128,7 +128,7 @@
             "style": "link"
           },
           {
-            "id": "2c7ee7ce-994b-447b-9738-5860ba286aa8",
+            "id": "cbd24323-2f01-4a4a-bedf-2be86fbf51fd",
             "cellValue": "selectedTab",
             "linkTarget": "parameter",
             "linkLabel": "Requests",
@@ -227,7 +227,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| project timestamp, operation_Name, type, outerMessage,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = exceptions\n| where timestamp {TimeRange}\n| where client_Type != \"Browser\"\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| project timestamp, operation_Name, type, outerMessage,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id, itemId\n| order by timestamp desc\n| take 200",
               "size": 0,
               "title": "Latest exceptions",
               "timeContextFromParameter": "TimeRange",
@@ -235,12 +235,120 @@
               "resourceType": "microsoft.insights/components",
               "visualization": "table",
               "gridSettings": {
-                "formatters": [],
+                "formatters": [
+                  {
+                    "columnMatch": "itemId",
+                    "formatter": 5
+                  }
+                ],
                 "rowLimit": 200,
                 "filter": true
-              }
+              },
+              "exportedParameters": [
+                {
+                  "fieldName": "itemId",
+                  "parameterName": "SelectedExceptionId",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "operation_Id",
+                  "parameterName": "SelectedExceptionOpId",
+                  "parameterType": 1
+                }
+              ]
             },
             "name": "Latest exceptions"
+          },
+          {
+            "type": 1,
+            "name": "Hint exception",
+            "content": {
+              "json": "_Click a row in the table above to see all its details below._"
+            }
+          },
+          {
+            "type": 12,
+            "name": "Selected exception details",
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "items": [
+                {
+                  "type": 1,
+                  "name": "Help exception",
+                  "content": {
+                    "json": "### Selected exception\nAll fields of the selected row, plus every request, dependency, exception and trace that belongs to the same operation."
+                  }
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "let row = exceptions\n| where timestamp {TimeRange}\n| where itemId == \"{SelectedExceptionId}\"\n| take 1;\nlet general = row\n| project-away customDimensions, customMeasurements, details\n| extend Bag = pack_all()\n| mv-expand Field = bag_keys(Bag) to typeof(string)\n| project Section = \"General\", Field, Value = tostring(Bag[Field]), SortKey = 1;\nlet custom = row\n| mv-expand Field = bag_keys(customDimensions) to typeof(string)\n| project Section = \"Custom properties\", Field, Value = tostring(customDimensions[Field]), SortKey = 2;\nunion general, custom\n| where isnotempty(Value)\n| order by SortKey asc, Field asc\n| project-away SortKey",
+                    "size": 0,
+                    "title": "All fields of the selected exception",
+                    "timeContextFromParameter": "TimeRange",
+                    "queryType": 0,
+                    "resourceType": "microsoft.insights/components",
+                    "visualization": "table",
+                    "gridSettings": {
+                      "rowLimit": 500,
+                      "filter": true
+                    }
+                  },
+                  "name": "All fields of the selected exception",
+                  "customWidth": "50"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "let row = exceptions\n| where timestamp {TimeRange}\n| where itemId == \"{SelectedExceptionId}\"\n| take 1;\nrow\n| mv-expand d = details\n| mv-expand f = d.parsedStack\n| project Exception = tostring(d.type), Message = tostring(d.message),\n          Level = toint(f.level), Method = tostring(f.method),\n          Assembly = tostring(f.assembly), File = tostring(f.fileName), Line = toint(f.line)",
+                    "size": 0,
+                    "title": "Stack trace",
+                    "timeContextFromParameter": "TimeRange",
+                    "queryType": 0,
+                    "resourceType": "microsoft.insights/components",
+                    "visualization": "table",
+                    "gridSettings": {
+                      "rowLimit": 500,
+                      "filter": true
+                    }
+                  },
+                  "name": "Stack trace",
+                  "customWidth": "50"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "union requests, dependencies, exceptions, traces\n| where timestamp {TimeRange}\n| where operation_Id == \"{SelectedExceptionOpId}\"\n| extend Name = case(\n    itemType == \"request\",    name,\n    itemType == \"dependency\", strcat(type, \" · \", target, \" · \", name),\n    itemType == \"exception\",  strcat(type, \": \", outerMessage),\n    itemType == \"trace\",      message,\n    \"\"),\n  Result = case(\n    itemType in (\"request\", \"dependency\"), strcat(resultCode, iff(success == false, \" (failed)\", \"\")),\n    itemType in (\"trace\", \"exception\"),    strcat(\"severity \", tostring(severityLevel)),\n    \"\")\n| project timestamp, Type = itemType, Name, Result, DurationMs = round(duration, 0), itemId\n| order by timestamp asc\n| take 500",
+                    "size": 0,
+                    "title": "Everything in the same operation",
+                    "timeContextFromParameter": "TimeRange",
+                    "queryType": 0,
+                    "resourceType": "microsoft.insights/components",
+                    "visualization": "table",
+                    "gridSettings": {
+                      "rowLimit": 500,
+                      "filter": true,
+                      "formatters": [
+                        {
+                          "columnMatch": "itemId",
+                          "formatter": 5
+                        }
+                      ]
+                    }
+                  },
+                  "name": "Everything in the same operation"
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "SelectedExceptionId",
+              "comparison": "isNotEqualTo",
+              "value": ""
+            }
           }
         ]
       },
@@ -346,7 +454,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Noise: HEAD/OPTIONS probes, static files and bot/scanner paths (.php, .png, ...)\n| where not(name startswith \"HEAD \" or name startswith \"OPTIONS \")\n| where not(name matches regex @\"(?i)\\.(php\\d?|aspx?|jsp|cgi|env|git|bak|sql|zip|png|jpe?g|gif|svg|ico|webp|css|js|map|txt|xml|woff2?|ttf|eot|html?)(/|$)\")\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| where success == false\n| project timestamp, name, resultCode, duration,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id\n| order by timestamp desc\n| take 200",
+              "query": "let MgOrg = \"{ManagingOrganizationId}\";\nlet Org = \"{OrganizationId}\";\nlet AllVals = dynamic([\"\", \"*\", \"value::all\"]);\nlet F = requests\n| where timestamp {TimeRange}\n// Noise: HEAD/OPTIONS probes, static files and bot/scanner paths (.php, .png, ...)\n| where not(name startswith \"HEAD \" or name startswith \"OPTIONS \")\n| where not(name matches regex @\"(?i)\\.(php\\d?|aspx?|jsp|cgi|env|git|bak|sql|zip|png|jpe?g|gif|svg|ico|webp|css|js|map|txt|xml|woff2?|ttf|eot|html?)(/|$)\")\n// Known noise: ignore getConnectionInfo entirely\n| where operation_Name !has \"getConnectionInfo\"\n| extend cd = tostring(customDimensions)\n| extend MgOrgId = coalesce(tostring(customDimensions.ManagingOrganizationId),\n                           extract(@'(?i)\"QueryParam\\.managingOrganizationId\":\"([^\"]*)\"', 1, cd)),\n         OrgId   = coalesce(tostring(customDimensions.OrganizationId),\n                           extract(@'(?i)\"QueryParam\\.organizationId\":\"([^\"]*)\"', 1, cd))\n| where MgOrg in (AllVals) or (MgOrg == \"__none__\" and isempty(MgOrgId)) or MgOrgId == MgOrg\n| where Org in (AllVals) or OrgId == Org;\nF\n| where success == false\n| project timestamp, name, resultCode, duration,\n          ManagingOrgId = MgOrgId, OrgId, user_AuthenticatedId, operation_Id, itemId\n| order by timestamp desc\n| take 200",
               "size": 0,
               "title": "Latest failed requests",
               "timeContextFromParameter": "TimeRange",
@@ -354,12 +462,100 @@
               "resourceType": "microsoft.insights/components",
               "visualization": "table",
               "gridSettings": {
-                "formatters": [],
+                "formatters": [
+                  {
+                    "columnMatch": "itemId",
+                    "formatter": 5
+                  }
+                ],
                 "rowLimit": 200,
                 "filter": true
-              }
+              },
+              "exportedParameters": [
+                {
+                  "fieldName": "itemId",
+                  "parameterName": "SelectedRequestId",
+                  "parameterType": 1
+                },
+                {
+                  "fieldName": "operation_Id",
+                  "parameterName": "SelectedRequestOpId",
+                  "parameterType": 1
+                }
+              ]
             },
             "name": "Latest failed requests"
+          },
+          {
+            "type": 1,
+            "name": "Hint request",
+            "content": {
+              "json": "_Click a row in the table above to see all its details below._"
+            }
+          },
+          {
+            "type": 12,
+            "name": "Selected request details",
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "items": [
+                {
+                  "type": 1,
+                  "name": "Help request",
+                  "content": {
+                    "json": "### Selected request\nAll fields of the selected row, plus every request, dependency, exception and trace that belongs to the same operation."
+                  }
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "let row = requests\n| where timestamp {TimeRange}\n| where itemId == \"{SelectedRequestId}\"\n| take 1;\nlet general = row\n| project-away customDimensions, customMeasurements\n| extend Bag = pack_all()\n| mv-expand Field = bag_keys(Bag) to typeof(string)\n| project Section = \"General\", Field, Value = tostring(Bag[Field]), SortKey = 1;\nlet custom = row\n| mv-expand Field = bag_keys(customDimensions) to typeof(string)\n| project Section = \"Custom properties\", Field, Value = tostring(customDimensions[Field]), SortKey = 2;\nunion general, custom\n| where isnotempty(Value)\n| order by SortKey asc, Field asc\n| project-away SortKey",
+                    "size": 0,
+                    "title": "All fields of the selected request",
+                    "timeContextFromParameter": "TimeRange",
+                    "queryType": 0,
+                    "resourceType": "microsoft.insights/components",
+                    "visualization": "table",
+                    "gridSettings": {
+                      "rowLimit": 500,
+                      "filter": true
+                    }
+                  },
+                  "name": "All fields of the selected request"
+                },
+                {
+                  "type": 3,
+                  "content": {
+                    "version": "KqlItem/1.0",
+                    "query": "union requests, dependencies, exceptions, traces\n| where timestamp {TimeRange}\n| where operation_Id == \"{SelectedRequestOpId}\"\n| extend Name = case(\n    itemType == \"request\",    name,\n    itemType == \"dependency\", strcat(type, \" · \", target, \" · \", name),\n    itemType == \"exception\",  strcat(type, \": \", outerMessage),\n    itemType == \"trace\",      message,\n    \"\"),\n  Result = case(\n    itemType in (\"request\", \"dependency\"), strcat(resultCode, iff(success == false, \" (failed)\", \"\")),\n    itemType in (\"trace\", \"exception\"),    strcat(\"severity \", tostring(severityLevel)),\n    \"\")\n| project timestamp, Type = itemType, Name, Result, DurationMs = round(duration, 0), itemId\n| order by timestamp asc\n| take 500",
+                    "size": 0,
+                    "title": "Everything in the same operation",
+                    "timeContextFromParameter": "TimeRange",
+                    "queryType": 0,
+                    "resourceType": "microsoft.insights/components",
+                    "visualization": "table",
+                    "gridSettings": {
+                      "rowLimit": 500,
+                      "filter": true,
+                      "formatters": [
+                        {
+                          "columnMatch": "itemId",
+                          "formatter": 5
+                        }
+                      ]
+                    }
+                  },
+                  "name": "Everything in the same operation"
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "SelectedRequestId",
+              "comparison": "isNotEqualTo",
+              "value": ""
+            }
           }
         ]
       },
